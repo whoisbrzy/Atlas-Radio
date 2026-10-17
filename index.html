@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Atlas — Free voice app for ER:LC roleplay</title>
+  <meta name="description" content="Atlas is a free voice app for Emergency Response: Liberty County communities — download it and get radio channels, department rooms, and pursuit-proof latency. No bots, no boosts." />
+  <meta name="theme-color" content="#000000" />
+  <meta property="og:title" content="Atlas — Free voice app for ER:LC roleplay" />
+  <meta property="og:description" content="Download Atlas: radio nets, department rooms, and pursuit-proof latency for ER:LC communities. No bots, no boosts, no ringing." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Pacifico&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <nav class="nav container" aria-label="Main">
+      <a class="nav__brand" href="#top">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stop-color="#ff4a1c" />
+              <stop offset="1" stop-color="#ff6a42" />
+            </linearGradient>
+          </defs>
+          <circle cx="16" cy="21.5" r="4" fill="url(#logoGrad)" />
+          <path d="M9.9 15.4a8.6 8.6 0 0 1 12.2 0" stroke="url(#logoGrad)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+          <path d="M5.8 11.3a14.4 14.4 0 0 1 20.4 0" stroke="url(#logoGrad)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+        </svg>
+        <span>Atlas</span>
+      </a>
+
+      <div class="nav__links" id="navLinks">
+        <a class="nav__link" href="#features">Features</a>
+        <a class="nav__link" href="#compare">Compare</a>
+        <a class="nav__link" href="#faq">FAQ</a>
+      </div>
+
+      <div class="nav__actions">
+        <a class="btn btn--primary btn--small" href="#download">Download</a>
+        <button class="nav__burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="hero__blinds" data-gradient-blinds data-colors="#ffcf9e,#ff8a5c,#ff4a1c,#b12d0c" data-angle="20" aria-hidden="true"></div>
+      <div class="hero__shade" aria-hidden="true"></div>
+
+      <div class="hero__inner container">
+        <h1 class="hero__title">
+          <span class="hero__title-line">Never think about</span>
+          <span class="hero__title-line hero__script">never joining</span>
+          <span class="hero__title-line">a VC server again</span>
+        </h1>
+
+        <p class="hero__lead">
+          Radio nets, department rooms, and pursuit-proof latency for
+          Emergency Response: Liberty County communities &mdash; no bots,
+          no boosts, no ringing. Download Atlas and go on air.
+        </p>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="https://github.com/whoisbrzy/Atlas-Radio/releases" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v10.5m0 0 3.5-3.5M12 13.5 8.5 10M4 15v3a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-3" /></svg>
+            Download free
+          </a>
+          <a class="btn btn--ghost" href="https://github.com/whoisbrzy/Atlas-Radio" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.72 0-1.26.45-2.3 1.19-3.11-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.18 1.19a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.76.12 3.05.74.81 1.18 1.85 1.18 3.11 0 4.45-2.69 5.43-5.25 5.71.41.36.78 1.06.78 2.14v3.17c0 .31.2.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z" /></svg>
+            Star on GitHub
+          </a>
+        </div>
+
+        <p class="hero__stats">
+          <span>48kHz audio</span><i aria-hidden="true"></i>
+          <span>&lt;50ms latency</span><i aria-hidden="true"></i>
+          <span>Free forever</span>
+        </p>
+      </div>
+
+      <div class="hero__scroll" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m0 0 6-6m-6 6-6-6" /></svg>
+      </div>
+    </section>
+
+    <!-- ============ TRUSTED BY ============ -->
+    <section class="strip" aria-label="Communities using Solara">
+      <p class="strip__label container">Powering voice on servers like</p>
+      <div class="marquee">
+        <div class="marquee__track">
+          <span class="marquee__item">Liberty State RP</span>
+          <span class="marquee__item">County Line Roleplay</span>
+          <span class="marquee__item">Code 4 RP</span>
+          <span class="marquee__item">Pursuit Community</span>
+          <span class="marquee__item">Northside RP</span>
+          <span class="marquee__item">Signal 100</span>
+          <span class="marquee__item">10-8 Roleplay</span>
+          <span class="marquee__item">Nightwatch RP</span>
+          <span class="marquee__item" aria-hidden="true">Liberty State RP</span>
+          <span class="marquee__item" aria-hidden="true">County Line Roleplay</span>
+          <span class="marquee__item" aria-hidden="true">Code 4 RP</span>
+          <span class="marquee__item" aria-hidden="true">Pursuit Community</span>
+          <span class="marquee__item" aria-hidden="true">Northside RP</span>
+          <span class="marquee__item" aria-hidden="true">Signal 100</span>
+          <span class="marquee__item" aria-hidden="true">10-8 Roleplay</span>
+          <span class="marquee__item" aria-hidden="true">Nightwatch RP</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="section" id="features">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="chip chip--label">Features</p>
+          <h2 class="section__title">Everything your departments need</h2>
+          <p class="section__sub">
+            Every core feature ships free. No gamepasses, no boost tiers, no surprise paywalls.
+          </p>
+        </header>
+
+        <div class="grid grid--features">
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 16 0M8 13a4 4 0 0 1 8 0" /><circle cx="12" cy="17" r="2.5" /><path d="M12 19.5V21" /></svg>
+            </div>
+            <h3 class="card__title">Dispatch radio nets</h3>
+            <p class="card__text">Push-to-talk channels with dispatch priority, so traffic stops don't turn into crosstalk.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l7-5 7 5v13" /><path d="M3 21h18M9 21v-5a3 3 0 0 1 6 0v5" /></svg>
+            </div>
+            <h3 class="card__title">Department rooms</h3>
+            <p class="card__text">PD, FD, EMS, and DOJ each get their own always-open rooms. One tap and you're on shift.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2Z" /></svg>
+            </div>
+            <h3 class="card__title">Pursuit-proof latency</h3>
+            <p class="card__text">Sub-50ms Opus 48kHz on edge regions. Callouts land when you call them, not three seconds later.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v5c0 4.4 3.4 8.4 8 9 4.6-.6 8-4.6 8-9V7l-8-4Z" /><path d="m9 12 2 2 4-4" /></svg>
+            </div>
+            <h3 class="card__title">Roles that make sense</h3>
+            <p class="card__text">Host, speaker, and mod per room — not a maze of Discord permission overwrites for every channel.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></svg>
+            </div>
+            <h3 class="card__title">Court &amp; screen share</h3>
+            <p class="card__text">Crisp 1080p60 streams for trials, briefings, and watch parties — free for everyone, not just donators.</p>
+            <span class="badge badge--soon">Coming soon</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12" /><circle cx="6.5" cy="18.5" r="2.5" /><circle cx="17.5" cy="16.5" r="2.5" /></svg>
+            </div>
+            <h3 class="card__title">Patrol radio &amp; DJ queue</h3>
+            <p class="card__text">Off-duty listening rooms with a shared queue. No music bots to babysit, no tokens to steal.</p>
+            <span class="badge badge--beta">Beta</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></svg>
+            </div>
+            <h3 class="card__title">Native desktop app</h3>
+            <p class="card__text">Download it, run it, done — background audio, push-to-talk, and a tray icon between calls. Mobile is next.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9c0 1.6.42 3.11 1.16 4.4L3 21l4.78-1.05" /><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" stroke-width="2.4" /></svg>
+            </div>
+            <h3 class="card__title">Free forever</h3>
+            <p class="card__text">Every feature, every quality tier, every member. Funded by optional cosmetics — never by locking your voice.</p>
+            <span class="badge badge--live">Live</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COMPARE ============ -->
+    <section class="section section--alt" id="compare">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="chip chip--label">Compare</p>
+          <h2 class="section__title">Atlas vs. Discord VCs</h2>
+          <p class="section__sub">Same job, none of the friction. Here's the honest scoreboard.</p>
+        </header>
+
+        <div class="table-wrap reveal">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col" class="table__hl">
+                  <span class="table__brand">
+                    <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="logoGradTable" x1="0" y1="1" x2="1" y2="0">
+                          <stop offset="0" stop-color="#ff4a1c" />
+                          <stop offset="1" stop-color="#ff6a42" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="16" cy="21.5" r="4" fill="url(#logoGradTable)" />
+                      <path d="M9.9 15.4a8.6 8.6 0 0 1 12.2 0" stroke="url(#logoGradTable)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+                      <path d="M5.8 11.3a14.4 14.4 0 0 1 20.4 0" stroke="url(#logoGradTable)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+                    </svg>
+                    Atlas
+                  </span>
+                </th>
+                <th scope="col">Discord VCs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Radio channels</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Built-in PTT dispatch net</td>
+                <td>Bot workarounds &amp; stream hacks</td>
+              </tr>
+              <tr>
+                <td>Department rooms</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> One tap, always open</td>
+                <td>Channel list + permission maze</td>
+              </tr>
+              <tr>
+                <td>Pursuit latency</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Sub-50ms for everyone</td>
+                <td>Best bitrate locked behind Nitro</td>
+              </tr>
+              <tr>
+                <td>Court screen share</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> 1080p60 free</td>
+                <td>1080p60 needs Nitro</td>
+              </tr>
+              <tr>
+                <td>Patrol music</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Built-in radio queue</td>
+                <td>Bot roulette &amp; token scams</td>
+              </tr>
+              <tr>
+                <td>Price</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Free forever</td>
+                <td>$9.99/mo to unlock it all</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="table-note reveal">Discord is a trademark of Discord Inc. Atlas is not affiliated with Discord.</p>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section" id="faq">
+      <div class="container container--narrow">
+        <header class="section__head reveal">
+          <p class="chip chip--label">FAQ</p>
+          <h2 class="section__title">Frequently asked questions</h2>
+          <p class="section__sub">Everything else, ask us in the beta.</p>
+        </header>
+
+        <div class="faq reveal">
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              What exactly is Atlas?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>Atlas is a free desktop app built around ER:LC-style roleplay — everything you actually use Discord VCs for, rebuilt without the rest. Radio nets for dispatch, always-open rooms per department, and quality that doesn't get paywalled mid-pursuit.</p></div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              Is Atlas affiliated with Roblox or PRC?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>No. Atlas is an independent, community-run project. It isn't affiliated with or endorsed by the Police Roleplay Community, Emergency Response: Liberty County, or Roblox Corporation. It's a companion voice tool your community can adopt on its own terms.</p></div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              Is it really free?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>Yes. Radio, department rooms, screen share, music rooms, roles — every core feature is free forever. We'll eventually sell optional cosmetics (profile flair, room themes), never features or quality.</p></div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              How do departments and dispatch work?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>Each department gets its own rooms with scoped roles: dispatch holds the priority push-to-talk net, speakers talk, mods keep the peace. No server-wide permission spaghetti — roles reset per room, so civilian and staff spaces stay cleanly separated.</p></div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              Do I have to leave Discord?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>Nope. Every room gets a link like <code>atlas.radio/g/yourroom</code> — drop it in your Discord announcements, shift briefings, or stream title. Members tap and they're in; no account needed to listen along.</p></div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__q" aria-expanded="false">
+              Where do I download Atlas?
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div class="faq__a"><div class="faq__a-inner"><p>Hit "Download free" — the latest installer always lives on the GitHub releases page. Download it, run it, and you're on air. It's free, and no account is needed to listen along.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DOWNLOAD ============ -->
+    <section class="section" id="download">
+      <div class="container">
+        <div class="cta reveal">
+          <div class="cta__glow" aria-hidden="true"></div>
+          <h2 class="cta__title">Ready to go <span class="cta__script">on air?</span></h2>
+          <p class="cta__sub">Download Atlas, bring your whole county. It takes about thirty seconds to hear the difference.</p>
+          <div class="cta__form">
+            <a class="btn btn--primary" href="https://github.com/whoisbrzy/Atlas-Radio/releases" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v10.5m0 0 3.5-3.5M12 13.5 8.5 10M4 15v3a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-3" /></svg>
+              Download free
+            </a>
+            <a class="btn btn--ghost" href="https://github.com/whoisbrzy/Atlas-Radio" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.72 0-1.26.45-2.3 1.19-3.11-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.18 1.19a11 11 0 0 1 5.8 0c2.2-1.5 3.17-1.19 3.17-1.19.63 1.58.23 2.76.12 3.05.74.81 1.18 1.85 1.18 3.11 0 4.45-2.69 5.43-5.25 5.71.41.36.78 1.06.78 2.14v3.17c0 .31.2.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z" /></svg>
+              Star on GitHub
+            </a>
+          </div>
+          <p class="cta__note">Free forever &middot; no account needed to listen &middot; updates shipped in-app.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a class="nav__brand" href="#top">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGradFoot" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stop-color="#ff4a1c" />
+              <stop offset="1" stop-color="#ff6a42" />
+            </linearGradient>
+          </defs>
+          <circle cx="16" cy="21.5" r="4" fill="url(#logoGradFoot)" />
+          <path d="M9.9 15.4a8.6 8.6 0 0 1 12.2 0" stroke="url(#logoGradFoot)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+          <path d="M5.8 11.3a14.4 14.4 0 0 1 20.4 0" stroke="url(#logoGradFoot)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+        </svg>
+        <span>Atlas</span>
+      </a>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="#features">Features</a>
+        <a href="#compare">Compare</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/whoisbrzy/Atlas-Radio" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+      <p class="footer__copy">&copy; <span id="year">2026</span> Atlas &middot; Not affiliated with PRC, ER:LC, or Roblox Corp.</p>
+    </div>
+  </footer>
+
+  <script src="gradient-blinds.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
