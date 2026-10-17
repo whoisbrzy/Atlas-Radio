@@ -53,6 +53,7 @@
         if (Array.isArray(remote.developerIds) && remote.developerIds.length) {
           CONFIG.developerIds = remote.developerIds;
         }
+        CONFIG.blockedCountries = Array.isArray(remote.blockedCountries) ? remote.blockedCountries : [];
       })
       .catch(function () { /* static hosting — fallbacks already in place */ });
   }
@@ -188,13 +189,14 @@
     fetch("/api/auth/logout", { method: "POST" }).catch(function () {});
       renderLogin(null);
       showBanOverlay(ban);
-      return;
+      return null;
     }
     renderLogin(user);
+    return user;
   }
 
   function loadUser() {
-    fetch("/api/auth/me", { credentials: "same-origin" })
+    return fetch("/api/auth/me", { credentials: "same-origin" })
       .then(function (r) {
         if (!r.ok) throw new Error("unauthorized");
         return r.json();
@@ -202,6 +204,7 @@
       .then(onUserLoaded)
       .catch(function () {
         renderLogin(null);
+        return null;
       });
   }
 
@@ -261,11 +264,6 @@
       menu.querySelector("[data-dashboard]").addEventListener("click", function () {
         menu.hidden = true;
         btn.setAttribute("aria-expanded", "false");
-      });
-      menu.querySelector("[data-developer]").addEventListener("click", function () {
-        menu.hidden = true;
-        btn.setAttribute("aria-expanded", "false");
-        openDevPanel();
       });
       menu.querySelector("[data-logout]").addEventListener("click", function () {
         fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {});
@@ -352,6 +350,11 @@
   function refreshDevLock() {
     if (!devPanel || !devPanel.classList.contains("is-open")) return;
     var user = currentUser();
+    if (document.body.classList.contains("dev-page")) {
+      devPanel.querySelector(".dev__main").hidden = false;
+      renderBanList();
+      return;
+    }
     if (isDeveloper(user)) {
       devPanel.querySelector(".dev__lock").hidden = true;
       devPanel.querySelector(".dev__main").hidden = false;
@@ -382,11 +385,6 @@
       '<button type="button" class="dev__btn" data-close>Close</button>' +
       '</header>' +
       '<div class="dev__body">' +
-      '<div class="dev__lock">' +
-      '<p class="dev__hint">Developer access is tied to specific Discord accounts. Sign in with a developer account to continue.</p>' +
-      '<button type="button" class="dev__btn dev__btn--primary dev__discord" data-discord>Continue with Discord</button>' +
-      '<p class="dev__status" hidden></p>' +
-      '</div>' +
       '<div class="dev__main" hidden>' +
       '<p class="dev__hint">Bans block Discord sign-in and show a restriction notice. Export and paste into <code>HARDCODED_BANNED_IDS</code> in script.js to make them permanent for everyone.</p>' +
       '<div class="dev__row">' +
@@ -408,7 +406,6 @@
     document.body.appendChild(devPanel);
 
     devPanel.querySelector("[data-close]").addEventListener("click", closeDevPanel);
-    devPanel.querySelector("[data-discord]").addEventListener("click", startDiscordLogin);
     devPanel.querySelector("[data-add]").addEventListener("click", function () {
       var id = devPanel.querySelector(".dev__id").value.trim();
       var reason = devPanel.querySelector(".dev__reason").value.trim();
@@ -460,6 +457,9 @@
   function openDevPanel() {
     if (!devPanel) buildDevPanel();
     devPanel.classList.add("is-open");
+    if (isDeveloper(currentUser())) {
+      devPanel.querySelector(".dev__main").hidden = false;
+    }
     refreshDevLock();
   }
 
@@ -468,6 +468,27 @@
   }
 
   function initDevPanel() {
+    if (document.body.classList.contains("dev-page")) {
+      loadUser().then(function (user) {
+        var status = document.getElementById("devPageStatus");
+        if (!isDeveloper(user)) {
+          status.textContent = "Developer access required. Sign in with an authorized account on Atlas, then return here.";
+          return;
+        }
+        status.hidden = true;
+        document.getElementById("devPageMount").appendChild(devPanel || (buildDevPanel(), devPanel));
+        devPanel.querySelector(".dev__main").hidden = false;
+        openDevPanel();
+        devPanel.querySelector("[data-close]").addEventListener("click", function () {
+          location.href = "/";
+        }, { once: true });
+        var countrySettings = document.getElementById("countrySettings");
+        countrySettings.hidden = false;
+        document.getElementById("blockedCountryList").textContent =
+          CONFIG.blockedCountries && CONFIG.blockedCountries.length ? CONFIG.blockedCountries.join(", ") : "None";
+      });
+      return;
+    }
     document.addEventListener("keydown", function (e) {
       if (e.ctrlKey && e.shiftKey && (e.key === "D" || e.key === "d")) {
         e.preventDefault();

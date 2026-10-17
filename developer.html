@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>Developer Panel — Atlas</title>
+  <link rel="icon" type="image/png" href="atlas-logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dev-page">
+  <header class="topbar">
+    <nav class="nav container" aria-label="Main">
+      <a class="nav__brand" href="/"><img class="logo-mark" src="atlas-logo.png" alt="" /><span>Atlas</span></a>
+      <div class="nav__actions"><a class="btn btn--ghost btn--small" href="/">Back to Atlas</a></div>
+    </nav>
+  </header>
+  <main class="dev-page__main container">
+    <div class="dev-page__intro">
+      <p class="eyebrow">Atlas administration</p>
+      <h1>Developer Panel</h1>
+      <p class="section__sub">Manage account bans and review platform access settings.</p>
+    </div>
+    <p id="devPageStatus" class="dev-page__status" role="status">Checking your developer session…</p>
+    <div id="devPageMount"></div>
+    <section class="dev-country card" id="countrySettings" hidden>
+      <h2>Country access</h2>
+      <p class="dev__hint">Country blocking is enforced at Vercel’s edge using its country code header. To update the shared blocklist, set the Vercel environment variable <code>BLOCKED_COUNTRIES</code> to comma-separated ISO 3166-1 alpha-2 codes (for example <code>CN,RU</code>), then redeploy.</p>
+      <p class="dev-country__active">Currently blocked: <strong id="blockedCountryList">None</strong></p>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <button id="discordLogin" type="button" hidden aria-hidden="true"></button>
+  <script src="script.js" defer></script>
+</body>
+</html>

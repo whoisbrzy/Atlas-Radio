@@ -75,6 +75,7 @@ serverless function in `api/config.js`, so there's no build step.
    - `DISCORD_CLIENT_SECRET` — your Discord OAuth2 client secret (server-side only)
    - `DEVELOPER_IDS` — comma-separated Discord user IDs, e.g.
      `123456789012345678,987654321098765432`
+   - `BLOCKED_COUNTRIES` (optional) — comma-separated ISO country codes, e.g. `CN,RU`
 3. In the Discord developer portal (**OAuth2 → Redirects**), add the exact Vercel
    callback URL (e.g. `https://atlasvc.vercel.app/auth/callback`).
 
@@ -82,6 +83,11 @@ Local development: copy `.env.example` → `.env`, fill it in, and run `vercel d
 Add the matching local callback URL (typically `http://localhost:3000/auth/callback`)
 to Discord's OAuth2 Redirects. Discord login requires the Vercel functions; a
 plain static server serves the landing page but cannot complete sign-in.
+
+The developer page is available at `/developer` to signed-in developer accounts.
+Country access is enforced at Vercel's routing middleware using the incoming
+`x-vercel-ip-country` header; update `BLOCKED_COUNTRIES` in Vercel and redeploy
+to change the shared list.
 
 The Vercel functions are required for Discord sign-in. Other static hosts can
 serve the landing page, but will not provide authentication.

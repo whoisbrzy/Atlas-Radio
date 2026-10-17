@@ -9,6 +9,10 @@ module.exports = (req, res) => {
     developerIds: (process.env.DEVELOPER_IDS || "")
       .split(",")
       .map(id => id.trim())
-      .filter(Boolean)
+      .filter(Boolean),
+    blockedCountries: (process.env.BLOCKED_COUNTRIES || "")
+      .split(",")
+      .map(code => code.trim().toUpperCase())
+      .filter(code => /^[A-Z]{2}$/.test(code))
   });
 };

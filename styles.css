@@ -496,6 +496,19 @@ code {
 
 .dev.is-open { display: block; }
 
+.dev-page { min-height: 100vh; background: var(--canvas); }
+.dev-page__main { padding-block: clamp(2rem, 7vw, 5rem); }
+.dev-page__intro { margin-bottom: 2rem; }
+.dev-page__intro h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.04em; }
+.dev-page__status { color: var(--muted); }
+.dev-page .dev { position: static; display: block; width: 100%; margin-top: 1rem; box-shadow: none; }
+.dev-page .dev__head { padding: 1rem 1.25rem; font-size: 1rem; }
+.dev-page .dev__body { padding: 1.25rem; }
+.dev-page .dev__main { display: grid; gap: 1rem; }
+.dev-country { margin-top: 1.25rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--panel); }
+.dev-country h2 { margin-bottom: .65rem; font-size: 1.1rem; }
+.dev-country__active { margin-top: 1rem; color: var(--body); font-size: .85rem; }
+
 .dev__head {
   display: flex;
   align-items: center;
