@@ -6,3 +6,4 @@
 # Dependencies
 node_modules/
 desktop-app/out/
+desktop-app/release/

@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('atlasDesktop', {
-  synthesizeSpeech: (text: string) => ipcRenderer.invoke('speech:synthesize', text) as Promise<string>
+  listVoices: () => ipcRenderer.invoke('speech:list-voices') as Promise<string[]>,
+  synthesizeSpeech: (text: string, voice: string) => ipcRenderer.invoke('speech:synthesize', text, voice) as Promise<string>
 })

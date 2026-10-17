@@ -7,35 +7,62 @@ import { randomUUID } from 'node:crypto'
 
 const MAX_SPEECH_CHARACTERS = 500
 
-ipcMain.handle('speech:synthesize', async (_event, input: unknown) => {
+function runPowerShell(script: string, environment: Record<string, string> = {}) {
+  return new Promise<string>((resolve, reject) => {
+    const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], {
+      windowsHide: true,
+      env: { ...process.env, ...environment },
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+    let output = ''
+    let errorOutput = ''
+    child.stdout?.on('data', (chunk: Buffer) => { output += chunk.toString() })
+    child.stderr?.on('data', (chunk: Buffer) => { errorOutput += chunk.toString() })
+    child.once('error', reject)
+    child.once('close', code => {
+      if (code === 0) resolve(output.trim())
+      else reject(new Error(errorOutput.trim() || 'Windows speech synthesis failed.'))
+    })
+  })
+}
+
+ipcMain.handle('speech:list-voices', async () => {
+  if (process.platform !== 'win32') throw new Error('Local speech output is currently supported on Windows only.')
+  const script = [
+    'Add-Type -AssemblyName System.Speech',
+    '$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer',
+    '$names = @($voice.GetInstalledVoices() | ForEach-Object { $_.VoiceInfo.Name })',
+    '$voice.Dispose()',
+    '$names | ConvertTo-Json -Compress'
+  ].join('; ')
+  const result = await runPowerShell(script)
+  const parsed: unknown = JSON.parse(result || '[]')
+  if (typeof parsed === 'string') return [parsed]
+  return Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []
+})
+
+ipcMain.handle('speech:synthesize', async (_event, input: unknown, selectedVoice: unknown) => {
   if (process.platform !== 'win32') throw new Error('Local speech output is currently supported on Windows only.')
   if (typeof input !== 'string' || !input.trim() || input.length > MAX_SPEECH_CHARACTERS) {
     throw new Error(`Enter between 1 and ${MAX_SPEECH_CHARACTERS} characters.`)
   }
+  if (typeof selectedVoice !== 'string' || selectedVoice.length > 200) throw new Error('Choose an installed Windows voice.')
 
   const outputPath = join(tmpdir(), `atlas-speech-${randomUUID()}.wav`)
   const script = [
     'Add-Type -AssemblyName System.Speech',
     '$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer',
+    '$voice.SelectVoice($env:ATLAS_VOICE_NAME)',
     '$voice.SetOutputToWaveFile($env:ATLAS_WAV_PATH)',
     '$voice.Speak($env:ATLAS_SPEECH_TEXT)',
     '$voice.Dispose()',
     'if (-not (Test-Path -LiteralPath $env:ATLAS_WAV_PATH)) { exit 2 }'
   ].join('; ')
 
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script], {
-      windowsHide: true,
-      env: { ...process.env, ATLAS_WAV_PATH: outputPath, ATLAS_SPEECH_TEXT: input.trim() },
-      stdio: ['ignore', 'ignore', 'pipe']
-    })
-    let errorOutput = ''
-    child.stderr?.on('data', (chunk: Buffer) => { errorOutput += chunk.toString() })
-    child.once('error', reject)
-    child.once('close', code => {
-      if (code === 0) resolve()
-      else reject(new Error(errorOutput.trim() || 'Windows speech synthesis failed.'))
-    })
+  await runPowerShell(script, {
+    ATLAS_WAV_PATH: outputPath,
+    ATLAS_SPEECH_TEXT: input.trim(),
+    ATLAS_VOICE_NAME: selectedVoice
   })
 
   try {
