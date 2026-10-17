@@ -14,7 +14,8 @@ module.exports = (req, res) => {
   }
   const expected = crypto.createHash("sha256").update(verifier).digest("base64url");
   if (expected !== challenge) return res.status(400).json({ error: "invalid_pkce" });
-  res.setHeader("Set-Cookie", `atlas_pkce=${verifier}; Path=/api/auth; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
+  // Discord returns through /auth/callback, so the cookie must cover that route.
+  res.setHeader("Set-Cookie", `atlas_pkce=${verifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
   const redirect = `${origin}/auth/callback`;
   const query = new URLSearchParams({
     client_id: clientId,

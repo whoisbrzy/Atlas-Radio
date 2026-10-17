@@ -164,7 +164,13 @@
     history.replaceState(null, "", location.pathname);
     var error = params.get("atlas_error");
     if (!savedState || state !== savedState || error) {
-      toast(error === "oauth_not_configured" ? "Discord sign-in needs DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET in Vercel." : (error ? "Discord sign-in failed. Check Vercel function logs and try again." : "Discord sign-in was cancelled or expired."));
+      var errors = {
+        oauth_not_configured: "Discord login needs DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET in Vercel.",
+        oauth_session_expired: "Discord sign-in session expired. Please try again.",
+        oauth_exchange_failed: "Discord rejected the token exchange. Check that /auth/callback exactly matches the Discord redirect URL and both Vercel credentials are correct.",
+        discord_denied: "Discord cancelled the sign-in. Please try again."
+      };
+      toast(error ? (errors[error] || "Discord sign-in failed (" + error + ").") : "Discord sign-in was cancelled or expired.");
       return true;
     }
     return true;
