@@ -316,25 +316,7 @@ code {
 .hero__title-line { display: block; }
 .hero__title-line:nth-child(2) { margin-bottom: .1em; }
 
-.hero__script {
-  font-family: var(--font-script);
-  font-weight: 400;
-  font-size: .78em;
-  letter-spacing: 0;
-  line-height: 1.15;
-  padding-right: .08em;
-}
-
-.hero__script-word { color: var(--flame); }
-
-.hero__logo {
-  display: inline-block;
-  width: .7em;
-  height: .7em;
-  margin-inline: .1em .06em;
-  vertical-align: baseline;
-  translate: 0 .05em;
-}
+.hero__accent { color: var(--flame); }
 
 .hero__lead {
   max-width: 38rem;
