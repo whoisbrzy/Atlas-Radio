@@ -134,22 +134,28 @@
   function renderLogin(user) {
     var btn = document.getElementById("discordLogin");
     if (!btn) return;
+    var menu = document.getElementById("profileMenu");
+    var developerItem = menu && menu.querySelector("[data-developer]");
     btn._user = user || null;
     if (user) {
       btn.classList.add("is-user");
       btn.innerHTML =
         '<img class="nav__avatar" src="' + discordAvatarUrl(user) + '" alt="" />' +
-        '<span>' + (user.global_name || user.username) + '</span>';
-      btn.removeAttribute("href");
-      btn.setAttribute("role", "button");
-      btn.title = "Log out";
+        '<span class="nav__login-name">' + escapeHtml(user.global_name || user.username) + '</span>' +
+        '<svg class="nav__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      btn.setAttribute("aria-label", "Open profile menu for " + (user.global_name || user.username));
+      btn.setAttribute("aria-expanded", "false");
+      btn.title = user.global_name || user.username;
+      if (developerItem) developerItem.hidden = !isDeveloper(user);
     } else {
       btn.classList.remove("is-user");
       btn.innerHTML =
         '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.6 1.25a18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.04.03C.53 9.05-.32 13.58.1 18.06c0 .02.02.05.04.06a19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.1 13 13 0 0 1-1.87-.9.08.08 0 0 1-.01-.12c.13-.1.25-.19.37-.29a.07.07 0 0 1 .08 0 14.2 14.2 0 0 0 12.06 0 .07.07 0 0 1 .08 0c.12.1.25.2.37.3a.08.08 0 0 1 0 .12 12.3 12.3 0 0 1-1.88.9.08.08 0 0 0-.04.1c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.02-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg><span>Log in</span>';
-      btn.setAttribute("href", "#");
-      btn.removeAttribute("role");
+      btn.setAttribute("aria-label", "Log in with Discord");
+      btn.removeAttribute("aria-expanded");
       btn.removeAttribute("title");
+      if (menu) menu.hidden = true;
+      if (developerItem) developerItem.hidden = true;
     }
     if (devPanel && devPanel.classList.contains("is-open")) refreshDevLock();
   }
@@ -237,18 +243,54 @@
   function initDiscordLogin() {
     var btn = document.getElementById("discordLogin");
     if (!btn) return;
+    var menu = document.getElementById("profileMenu");
     if (handleAuthCallback()) loadUser();
 
     btn.addEventListener("click", function (e) {
       if (btn.classList.contains("is-user")) {
         e.preventDefault();
-      fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {});
-        renderLogin(null);
-        toast("Logged out of Discord.");
+        var expanded = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", String(!expanded));
+        menu.hidden = expanded;
         return;
       }
-      e.preventDefault();
       startDiscordLogin();
+    });
+
+    if (menu) {
+      menu.querySelector("[data-dashboard]").addEventListener("click", function () {
+        menu.hidden = true;
+        btn.setAttribute("aria-expanded", "false");
+      });
+      menu.querySelector("[data-developer]").addEventListener("click", function () {
+        menu.hidden = true;
+        btn.setAttribute("aria-expanded", "false");
+        openDevPanel();
+      });
+      menu.querySelector("[data-logout]").addEventListener("click", function () {
+        fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {});
+        renderLogin(null);
+        toast("Logged out of Discord.");
+      });
+      document.addEventListener("click", function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) {
+          menu.hidden = true;
+          btn.setAttribute("aria-expanded", "false");
+        }
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !menu.hidden) {
+          menu.hidden = true;
+          btn.setAttribute("aria-expanded", "false");
+          btn.focus();
+        }
+      });
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (char) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char];
     });
   }
 

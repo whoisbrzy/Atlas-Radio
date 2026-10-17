@@ -9,7 +9,7 @@
   <meta property="og:title" content="Atlas — Free voice app for ER:LC roleplay" />
   <meta property="og:description" content="Download Atlas: radio nets, department rooms, and pursuit-proof latency for ER:LC communities — plus a TTS connector so you never use your real voice." />
   <meta property="og:type" content="website" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" href="atlas-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Pacifico&display=swap" rel="stylesheet" />
@@ -20,17 +20,7 @@
   <header class="topbar">
     <nav class="nav container" aria-label="Main">
       <a class="nav__brand" href="#top">
-        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
-          <defs>
-            <linearGradient id="logoGrad" x1="0" y1="1" x2="1" y2="0">
-              <stop offset="0" stop-color="#ff4a1c" />
-              <stop offset="1" stop-color="#ff6a42" />
-            </linearGradient>
-          </defs>
-          <circle cx="16" cy="21.5" r="4" fill="url(#logoGrad)" />
-          <path d="M9.9 15.4a8.6 8.6 0 0 1 12.2 0" stroke="url(#logoGrad)" stroke-width="2.6" stroke-linecap="round" fill="none" />
-          <path d="M5.8 11.3a14.4 14.4 0 0 1 20.4 0" stroke="url(#logoGrad)" stroke-width="2.6" stroke-linecap="round" fill="none" />
-        </svg>
+        <img class="logo-mark" src="atlas-logo.png" alt="" />
         <span>Atlas</span>
       </a>
 
@@ -41,10 +31,15 @@
       </div>
 
       <div class="nav__actions">
-        <a class="btn btn--ghost btn--small nav__login" id="discordLogin" href="#" aria-label="Log in with Discord">
+        <button class="btn btn--ghost btn--small nav__login" id="discordLogin" type="button" aria-label="Log in with Discord">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.6 1.25a18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.04.03C.53 9.05-.32 13.58.1 18.06c0 .02.02.05.04.06a19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.1 13 13 0 0 1-1.87-.9.08.08 0 0 1-.01-.12c.13-.1.25-.19.37-.29a.07.07 0 0 1 .08 0 14.2 14.2 0 0 0 12.06 0 .07.07 0 0 1 .08 0c.12.1.25.2.37.3a.08.08 0 0 1 0 .12 12.3 12.3 0 0 1-1.88.9.08.08 0 0 0-.04.1c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.02-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg>
           <span>Log in</span>
-        </a>
+        </button>
+        <div class="profile-menu" id="profileMenu" hidden>
+          <a class="profile-menu__item" href="#download" data-dashboard title="The Atlas dashboard will be available when the app launches">Dashboard <span class="profile-menu__soon">Coming soon</span></a>
+          <button class="profile-menu__item" type="button" data-developer hidden>Developer Panel</button>
+          <button class="profile-menu__item profile-menu__logout" type="button" data-logout>Log out</button>
+        </div>
         <a class="btn btn--primary btn--small" href="#download">Download</a>
         <button class="nav__burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>

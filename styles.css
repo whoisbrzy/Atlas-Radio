@@ -160,6 +160,13 @@ code {
   letter-spacing: -.02em;
 }
 
+.nav__brand .logo-mark {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
 .nav__links {
   display: flex;
   align-items: center;
@@ -184,11 +191,49 @@ code {
 
 .nav__actions { display: inline-flex; align-items: center; gap: .5rem; }
 
-.nav__login { gap: .4rem; }
+.nav__login { gap: .4rem; cursor: pointer; }
 .nav__login svg { width: 15px; height: 15px; }
 .nav__login.is-user { padding-left: .45rem; }
 
-.nav__avatar { width: 20px; height: 20px; border-radius: 50%; }
+.nav__avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.nav__login-name { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+.nav__login .nav__chevron { width: 14px; height: 14px; transition: rotate var(--dur) var(--ease); }
+.nav__login[aria-expanded="true"] .nav__chevron { rotate: 180deg; }
+
+.profile-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + .55rem);
+  right: 0;
+  display: grid;
+  min-width: 190px;
+  padding: .4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 45%);
+}
+.profile-menu[hidden] { display: none; }
+.nav__actions { position: relative; }
+.profile-menu__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  padding: .55rem .7rem;
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 3px);
+  background: transparent;
+  color: var(--body);
+  font: inherit;
+  font-size: .9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.profile-menu__item:hover { background: var(--raised); color: var(--fg); }
+.profile-menu__item[hidden] { display: none; }
+.profile-menu__soon { margin-left: auto; color: var(--muted); font-size: .7rem; }
+.profile-menu__logout { border-top: 1px solid var(--line); border-radius: 0 0 calc(var(--radius-lg) - 3px) calc(var(--radius-lg) - 3px); color: var(--muted); }
 
 .nav__burger {
   display: none;
