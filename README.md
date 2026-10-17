@@ -17,6 +17,11 @@ python -m http.server 8080
 
 Then open http://localhost:8080 (or http://localhost:3000 for `serve`).
 
+## Desktop app
+
+The separate desktop app project is in [`desktop-app/`](desktop-app/README.md).
+It has its own code, UI, and assets; it does not import resources from the landing site.
+
 ### Structure
 
 - `index.html` — page markup (hero, marquee strip, reviews, pricing, comparison table, FAQ, download CTA, footer)
