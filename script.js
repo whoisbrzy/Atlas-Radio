@@ -6,31 +6,30 @@
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ================================================================
-     Discord login — OAuth2 implicit grant, no backend required.
-     1. Create an application at https://discord.com/developers/applications
-     2. OAuth2 → add redirect: this site's URL (e.g. http://localhost:8080/)
-     3. Paste the Client ID below. Scope: identify only; the token is
-        kept in sessionStorage and never leaves the browser.
+     Configuration.
+     - On Vercel, values come from environment variables via /api/config
+       (DISCORD_CLIENT_ID, DEVELOPER_IDS — see .env.example).
+     - Elsewhere (GitHub Pages, plain static hosting), the hardcoded
+       fallbacks below are used.
      ================================================================ */
 
-  var DISCORD_CLIENT_ID = "";
+  var FALLBACK_CLIENT_ID = "";
+  var FALLBACK_DEVELOPER_IDS = [];
+
+  var CONFIG = { clientId: FALLBACK_CLIENT_ID, developerIds: FALLBACK_DEVELOPER_IDS };
+
   var TOKEN_KEY = "atlas_discord_token";
 
   /* ================================================================
-     Developer panel & bans.
-     - Open with Ctrl+Shift+D (or add #dev to the URL), passcode below.
-     - Bans live in localStorage; HARDCODED_BANNED_IDS ships with the
-       site and applies everywhere. Export from the panel and paste
-       here to make a ban permanent for everyone.
-     NOTE: this is client-side enforcement for a static site — a
-     determined user can edit the JS. Real enforcement needs a backend
-     when the desktop app ships.
+     Bans. Local bans live in localStorage; HARDCODED_BANNED_IDS ships
+     with the site and applies everywhere. Export from the dev panel
+     and paste here to make a ban permanent for everyone.
+     NOTE: client-side enforcement only on a static site — mirror the
+     ban list in the desktop app's backend when it ships.
      ================================================================ */
 
-  var DEVELOPER_PASSCODE = "atlas-dev";
   var HARDCODED_BANNED_IDS = [];
   var BANS_KEY = "atlas_bans";
-  var DEV_UNLOCK_KEY = "atlas_dev_unlocked";
 
   function toast(message) {
     var el = document.getElementById("toast");
@@ -41,6 +40,22 @@
     el._timer = setTimeout(function () {
       el.classList.remove("is-show");
     }, 3200);
+  }
+
+  /* ---------- config ---------- */
+
+  function loadRemoteConfig() {
+    if (location.protocol === "file:") return Promise.resolve();
+    return fetch("/api/config")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (remote) {
+        if (!remote) return;
+        if (remote.clientId) CONFIG.clientId = remote.clientId;
+        if (Array.isArray(remote.developerIds) && remote.developerIds.length) {
+          CONFIG.developerIds = remote.developerIds;
+        }
+      })
+      .catch(function () { /* static hosting — fallbacks already in place */ });
   }
 
   /* ---------- ban storage ---------- */
@@ -99,7 +114,7 @@
     document.body.appendChild(overlay);
   }
 
-  /* ---------- discord user rendering ---------- */
+  /* ---------- discord login ---------- */
 
   function discordAvatarUrl(user) {
     return user.avatar
@@ -107,9 +122,20 @@
       : "https://cdn.discordapp.com/embed/avatars/" + (Number(user.discriminator) % 5 || 0) + ".png";
   }
 
+  function currentUser() {
+    var btn = document.getElementById("discordLogin");
+    return btn && btn._user ? btn._user : null;
+  }
+
+  function isDeveloper(user) {
+    if (!user) return false;
+    return CONFIG.developerIds.map(String).indexOf(String(user.id)) !== -1;
+  }
+
   function renderLogin(user) {
     var btn = document.getElementById("discordLogin");
     if (!btn) return;
+    btn._user = user || null;
     if (user) {
       btn.classList.add("is-user");
       btn.innerHTML =
@@ -118,7 +144,6 @@
       btn.removeAttribute("href");
       btn.setAttribute("role", "button");
       btn.title = "Log out";
-      btn._user = user;
     } else {
       btn.classList.remove("is-user");
       btn.innerHTML =
@@ -126,8 +151,8 @@
       btn.setAttribute("href", "#");
       btn.removeAttribute("role");
       btn.removeAttribute("title");
-      btn._user = null;
     }
+    if (devPanel && devPanel.classList.contains("is-open")) refreshDevLock();
   }
 
   function handleAuthCallback() {
@@ -183,12 +208,20 @@
     try { sessionStorage.setItem("atlas_oauth_state", state); } catch (e) { /* ignore */ }
     return (
       "https://discord.com/oauth2/authorize" +
-      "?client_id=" + encodeURIComponent(DISCORD_CLIENT_ID) +
+      "?client_id=" + encodeURIComponent(CONFIG.clientId) +
       "&response_type=token" +
       "&redirect_uri=" + encodeURIComponent(redirect) +
       "&scope=identify" +
       "&state=" + encodeURIComponent(state)
     );
+  }
+
+  function startDiscordLogin() {
+    if (!CONFIG.clientId) {
+      toast("Discord login isn't configured — set DISCORD_CLIENT_ID (see .env.example).");
+      return;
+    }
+    location.href = loginUrl();
   }
 
   function initDiscordLogin() {
@@ -205,25 +238,20 @@
         return;
       }
       e.preventDefault();
-      if (!DISCORD_CLIENT_ID) {
-        toast("Discord login isn't set up yet — paste your app's Client ID into script.js.");
-        return;
-      }
-      location.href = loginUrl();
+      startDiscordLogin();
     });
   }
 
   /* ================================================================
-     Developer panel — Ctrl+Shift+D or #dev
+     Developer panel — Ctrl+Shift+D or #dev.
+     Access requires signing in with a Discord account whose ID is in
+     CONFIG.developerIds (set via the DEVELOPER_IDS env var on Vercel).
      ================================================================ */
 
   var devPanel = null;
 
-  function isDevUnlocked() {
-    try { return sessionStorage.getItem(DEV_UNLOCK_KEY) === "1"; } catch (e) { return false; }
-  }
-
   function renderBanList() {
+    if (!devPanel) return;
     var list = devPanel.querySelector(".dev__bans");
     if (!list) return;
     var bans = getBans();
@@ -262,6 +290,34 @@
     });
   }
 
+  function setDevStatus(message) {
+    var status = devPanel ? devPanel.querySelector(".dev__status") : null;
+    if (!status) return;
+    status.textContent = message || "";
+    status.hidden = !message;
+  }
+
+  function refreshDevLock() {
+    if (!devPanel || !devPanel.classList.contains("is-open")) return;
+    var user = currentUser();
+    if (isDeveloper(user)) {
+      devPanel.querySelector(".dev__lock").hidden = true;
+      devPanel.querySelector(".dev__main").hidden = false;
+      setDevStatus("");
+      var banSelf = devPanel.querySelector("[data-banself]");
+      if (banSelf) banSelf.hidden = false;
+      renderBanList();
+    } else {
+      devPanel.querySelector(".dev__lock").hidden = false;
+      devPanel.querySelector(".dev__main").hidden = true;
+      if (user) {
+        setDevStatus("Signed in as " + (user.global_name || user.username) + " — that account isn't a developer.");
+      } else {
+        setDevStatus("");
+      }
+    }
+  }
+
   function buildDevPanel() {
     devPanel = document.createElement("aside");
     devPanel.id = "devPanel";
@@ -275,8 +331,9 @@
       '</header>' +
       '<div class="dev__body">' +
       '<div class="dev__lock">' +
-      '<input class="dev__input dev__pass" type="password" placeholder="Developer passcode" aria-label="Developer passcode" />' +
-      '<button type="button" class="dev__btn dev__btn--primary" data-unlock>Unlock</button>' +
+      '<p class="dev__hint">Developer access is tied to specific Discord accounts. Sign in with a developer account to continue.</p>' +
+      '<button type="button" class="dev__btn dev__btn--primary dev__discord" data-discord>Continue with Discord</button>' +
+      '<p class="dev__status" hidden></p>' +
       '</div>' +
       '<div class="dev__main" hidden>' +
       '<p class="dev__hint">Bans block Discord sign-in and show a restriction notice. Export and paste into <code>HARDCODED_BANNED_IDS</code> in script.js to make them permanent for everyone.</p>' +
@@ -299,20 +356,7 @@
     document.body.appendChild(devPanel);
 
     devPanel.querySelector("[data-close]").addEventListener("click", closeDevPanel);
-    devPanel.querySelector("[data-unlock]").addEventListener("click", function () {
-      var input = devPanel.querySelector(".dev__pass");
-      if (input.value === DEVELOPER_PASSCODE) {
-        try { sessionStorage.setItem(DEV_UNLOCK_KEY, "1"); } catch (e) { /* ignore */ }
-        unlockDevPanel();
-      } else {
-        input.value = "";
-        input.focus();
-        toast("Wrong passcode.");
-      }
-    });
-    devPanel.querySelector(".dev__pass").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") devPanel.querySelector("[data-unlock]").click();
-    });
+    devPanel.querySelector("[data-discord]").addEventListener("click", startDiscordLogin);
     devPanel.querySelector("[data-add]").addEventListener("click", function () {
       var id = devPanel.querySelector(".dev__id").value.trim();
       var reason = devPanel.querySelector(".dev__reason").value.trim();
@@ -327,8 +371,7 @@
       toast("Banned " + id + ".");
     });
     devPanel.querySelector("[data-banself]").addEventListener("click", function () {
-      var btn = document.getElementById("discordLogin");
-      var user = btn && btn._user;
+      var user = currentUser();
       if (!user) return;
       addBan(user.id, "Banned from the developer panel.");
       try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
@@ -359,25 +402,13 @@
       }
     });
 
-    if (isDevUnlocked()) unlockDevPanel();
-    renderBanList();
-  }
-
-  function unlockDevPanel() {
-    if (!devPanel) return;
-    devPanel.querySelector(".dev__lock").hidden = true;
-    devPanel.querySelector(".dev__main").hidden = false;
-    var loginBtn = document.getElementById("discordLogin");
-    var banSelf = devPanel.querySelector("[data-banself]");
-    if (banSelf) banSelf.hidden = !(loginBtn && loginBtn._user);
     renderBanList();
   }
 
   function openDevPanel() {
     if (!devPanel) buildDevPanel();
     devPanel.classList.add("is-open");
-    if (isDevUnlocked()) unlockDevPanel();
-    else devPanel.querySelector(".dev__pass").focus();
+    refreshDevLock();
   }
 
   function closeDevPanel() {
@@ -456,16 +487,21 @@
 
   /* ---------- boot ---------- */
 
-  initDiscordLogin();
-  initDevPanel();
+  loadRemoteConfig().then(function () {
+    initDiscordLogin();
+    initDevPanel();
 
-  /* Debug/testing hooks (also used for automated verification) */
-  window.__atlas = {
-    getBans: getBans,
-    isUserBanned: isUserBanned,
-    addBan: addBan,
-    removeBan: removeBan,
-    testLoginAs: function (user) { onUserLoaded(user); },
-    dev: { open: openDevPanel, close: closeDevPanel }
-  };
+    /* Debug/testing hooks — harmless client-side (bans are per-browser),
+       used by automated verification. Remove if you like. */
+    window.__atlas = {
+      config: function () { return JSON.parse(JSON.stringify(CONFIG)); },
+      getBans: getBans,
+      isUserBanned: isUserBanned,
+      addBan: addBan,
+      removeBan: removeBan,
+      setDeveloperIds: function (ids) { CONFIG.developerIds = ids.map(String); },
+      testLoginAs: function (user) { onUserLoaded(user); },
+      dev: { open: openDevPanel, close: closeDevPanel, refresh: refreshDevLock }
+    };
+  });
 })();

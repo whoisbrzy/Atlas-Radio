@@ -44,8 +44,9 @@ After sign-in, the button shows the user's avatar + display name; clicking it lo
 
 ## Developer panel & bans
 
-Open with **Ctrl+Shift+D** (or append `#dev` to the URL). Default passcode:
-`atlas-dev` — change `DEVELOPER_PASSCODE` in `script.js`.
+Open with **Ctrl+Shift+D** (or append `#dev` to the URL). Access is tied to
+**specific Discord accounts**: sign in with an account whose ID is in the
+`DEVELOPER_IDS` list — everyone else sees a "not a developer" notice.
 
 - **Ban** a Discord user by ID (with optional reason), **unban**, or ban the
   currently logged-in user with one click
@@ -58,6 +59,28 @@ Open with **Ctrl+Shift+D** (or append `#dev` to the URL). Default passcode:
 > Client-side enforcement only: a static site can't truly prevent a
 > determined user. For real enforcement, mirror the ban list in the desktop
 > app's backend when it ships.
+
+## Deploy on Vercel (recommended)
+
+The site reads its Discord config at runtime from `/api/config`, a Vercel
+serverless function in `api/config.js`, so there's no build step.
+
+1. Import the repo in Vercel (zero config — static files + `api/` are picked up).
+2. **Project → Settings → Environment Variables**, add:
+   - `DISCORD_CLIENT_ID` — your Discord application's client ID
+   - `DEVELOPER_IDS` — comma-separated Discord user IDs, e.g.
+     `123456789012345678,987654321098765432`
+3. In the Discord developer portal (**OAuth2 → Redirects**), add the Vercel
+   URL (e.g. `https://atlas-radio.vercel.app/`) plus `http://localhost:8080/`
+   for local work.
+
+Local development: copy `.env.example` → `.env`, fill it in, and run
+`vercel dev` (env vars from `.env` are injected into `/api/config`). A plain
+static server also works — `script.js` then falls back to the hardcoded
+`FALLBACK_CLIENT_ID` / `FALLBACK_DEVELOPER_IDS` at the top of the file.
+
+GitHub Pages (or any host without functions) also works with those fallbacks —
+Vercel is recommended so the values live in env vars instead of the repo.
 
 ## Releases
 

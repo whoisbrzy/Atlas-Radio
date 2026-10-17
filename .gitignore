@@ -1,0 +1,7 @@
+# Local secrets / platform files
+.env
+.env.local
+.vercel
+
+# Dependencies
+node_modules/
