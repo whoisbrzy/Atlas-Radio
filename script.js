@@ -18,7 +18,6 @@
 
   var CONFIG = { clientId: FALLBACK_CLIENT_ID, developerIds: FALLBACK_DEVELOPER_IDS };
 
-  var TOKEN_KEY = "atlas_discord_token";
 
   /* ================================================================
      Bans. Local bans live in localStorage; HARDCODED_BANNED_IDS ships
@@ -156,27 +155,25 @@
   }
 
   function handleAuthCallback() {
-    var hash = location.hash;
-    if (hash.indexOf("access_token=") === -1) return false;
-    var params = new URLSearchParams(hash.slice(1));
-    var token = params.get("access_token");
+    var params = new URLSearchParams(location.search);
+    if (!params.has("atlas_session") && !params.has("atlas_error")) return false;
     var state = params.get("state");
     var savedState = null;
     try { savedState = sessionStorage.getItem("atlas_oauth_state"); } catch (e) { /* ignore */ }
     try { sessionStorage.removeItem("atlas_oauth_state"); } catch (e) { /* ignore */ }
-    history.replaceState(null, "", location.pathname + location.search);
-    if (!token || (savedState && state !== savedState)) {
-      toast("Discord sign-in was cancelled or expired.");
+    history.replaceState(null, "", location.pathname);
+    var error = params.get("atlas_error");
+    if (!savedState || state !== savedState || error) {
+      toast(error === "oauth_not_configured" ? "Discord sign-in needs DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET in Vercel." : (error ? "Discord sign-in failed. Check Vercel function logs and try again." : "Discord sign-in was cancelled or expired."));
       return true;
     }
-    try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* ignore */ }
     return true;
   }
 
   function onUserLoaded(user) {
     var ban = isUserBanned(user.id);
     if (ban) {
-      try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
+    fetch("/api/auth/logout", { method: "POST" }).catch(function () {});
       renderLogin(null);
       showBanOverlay(ban);
       return;
@@ -185,43 +182,50 @@
   }
 
   function loadUser() {
-    var token = null;
-    try { token = sessionStorage.getItem(TOKEN_KEY); } catch (e) { /* ignore */ }
-    if (!token) return;
-    fetch("https://discord.com/api/v10/users/@me", {
-      headers: { Authorization: "Bearer " + token }
-    })
+    fetch("/api/auth/me", { credentials: "same-origin" })
       .then(function (r) {
         if (!r.ok) throw new Error("unauthorized");
         return r.json();
       })
       .then(onUserLoaded)
       .catch(function () {
-        try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
         renderLogin(null);
       });
   }
 
   function loginUrl() {
-    var redirect = location.origin + location.pathname;
     var state = Math.random().toString(36).slice(2) + Date.now().toString(36);
     try { sessionStorage.setItem("atlas_oauth_state", state); } catch (e) { /* ignore */ }
-    return (
-      "https://discord.com/oauth2/authorize" +
-      "?client_id=" + encodeURIComponent(CONFIG.clientId) +
-      "&response_type=token" +
-      "&redirect_uri=" + encodeURIComponent(redirect) +
-      "&scope=identify" +
-      "&state=" + encodeURIComponent(state)
-    );
+    return state;
   }
 
   function startDiscordLogin() {
     if (!CONFIG.clientId) {
-      toast("Discord login isn't configured — set DISCORD_CLIENT_ID (see .env.example).");
+      toast("Discord login isn't configured — set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET in Vercel.");
       return;
     }
-    location.href = loginUrl();
+    createCodeChallenge().then(function (data) {
+      var url = "/api/auth/start?state=" + encodeURIComponent(loginUrl()) +
+        "&challenge=" + encodeURIComponent(data.challenge) +
+        "&verifier=" + encodeURIComponent(data.verifier);
+      location.href = url;
+    }).catch(function () {
+      toast("Could not start secure Discord sign-in. Please try again.");
+    });
+  }
+
+  function createCodeChallenge() {
+    var bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    var verifier = Array.prototype.map.call(bytes, function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)).then(function (digest) {
+      var binary = Array.prototype.map.call(new Uint8Array(digest), function (b) {
+        return String.fromCharCode(b);
+      }).join("");
+      return { verifier: verifier, challenge: btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") };
+    });
   }
 
   function initDiscordLogin() {
@@ -232,7 +236,7 @@
     btn.addEventListener("click", function (e) {
       if (btn.classList.contains("is-user")) {
         e.preventDefault();
-        try { sessionStorage.removeItem(TOKEN_KEY); } catch (err) { /* ignore */ }
+      fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {});
         renderLogin(null);
         toast("Logged out of Discord.");
         return;
@@ -374,7 +378,7 @@
       var user = currentUser();
       if (!user) return;
       addBan(user.id, "Banned from the developer panel.");
-      try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ignore */ }
+      fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(function () {});
       renderLogin(null);
       renderBanList();
       showBanOverlay({ reason: "Banned from the developer panel." });
