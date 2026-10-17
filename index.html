@@ -35,7 +35,7 @@
       </a>
 
       <div class="nav__links" id="navLinks">
-        <a class="nav__link" href="#features">Features</a>
+        <a class="nav__link" href="#pricing">Pricing</a>
         <a class="nav__link" href="#compare">Compare</a>
         <a class="nav__link" href="#faq">FAQ</a>
       </div>
@@ -95,7 +95,7 @@
     </section>
 
     <!-- ============ TRUSTED BY ============ -->
-    <section class="strip" aria-label="Communities using Solara">
+    <section class="strip" aria-label="Communities using Atlas">
       <p class="strip__label container">Powering voice on servers like</p>
       <div class="marquee">
         <div class="marquee__track">
@@ -119,90 +119,44 @@
       </div>
     </section>
 
-    <!-- ============ FEATURES ============ -->
-    <section class="section" id="features">
+    <!-- ============ PRICING ============ -->
+    <section class="section" id="pricing">
       <div class="container">
         <header class="section__head reveal">
-          <p class="chip chip--label">Features</p>
-          <h2 class="section__title">Everything your departments need</h2>
-          <p class="section__sub">
-            Every core feature ships free. No gamepasses, no boost tiers, no surprise paywalls.
-          </p>
+          <h2 class="section__title">Simple pricing</h2>
+          <p class="section__sub">Every core feature is free forever. Go Pro for voices that sound real.</p>
         </header>
 
-        <div class="grid grid--features">
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a8 8 0 0 1 16 0M8 13a4 4 0 0 1 8 0" /><circle cx="12" cy="17" r="2.5" /><path d="M12 19.5V21" /></svg>
-            </div>
-            <h3 class="card__title">Police radio suite</h3>
-            <p class="card__text">Dispatch-priority push-to-talk, call signs, and channel scanning — the full radio toolkit ships in the desktop app.</p>
-            <span class="badge badge--live">Live</span>
+        <div class="pricing">
+          <article class="plan reveal">
+            <h3 class="plan__name">Free</h3>
+            <p class="plan__price">$0<span>/forever</span></p>
+            <ul class="plan__list">
+              <li>Standard TTS voices</li>
+              <li>Police radio suite</li>
+              <li>Department rooms &amp; roles</li>
+              <li>Patrol radio &amp; DJ queue</li>
+              <li>Community support</li>
+            </ul>
+            <a class="btn btn--ghost plan__cta" href="https://github.com/whoisbrzy/Atlas-Radio/releases" target="_blank" rel="noopener">Download free</a>
           </article>
 
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l7-5 7 5v13" /><path d="M3 21h18M9 21v-5a3 3 0 0 1 6 0v5" /></svg>
-            </div>
-            <h3 class="card__title">Department rooms</h3>
-            <p class="card__text">PD, FD, EMS, and DOJ each get their own always-open rooms. One tap and you're on shift.</p>
-            <span class="badge badge--live">Live</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2Z" /></svg>
-            </div>
-            <h3 class="card__title">Pursuit-proof latency</h3>
-            <p class="card__text">Sub-50ms Opus 48kHz on edge regions. Callouts land when you call them, not three seconds later.</p>
-            <span class="badge badge--live">Live</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v5c0 4.4 3.4 8.4 8 9 4.6-.6 8-4.6 8-9V7l-8-4Z" /><path d="m9 12 2 2 4-4" /></svg>
-            </div>
-            <h3 class="card__title">Roles that make sense</h3>
-            <p class="card__text">Host, speaker, and mod per room — not a maze of Discord permission overwrites for every channel.</p>
-            <span class="badge badge--live">Live</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" /><path d="M8 9h8M8 12.5h5" /></svg>
-            </div>
-            <h3 class="card__title">TTS voice connector</h3>
-            <p class="card__text">Type in Atlas, speak in Discord. A text-to-speech connector that talks for you — your real voice never has to come off mute.</p>
-            <span class="badge badge--live">Live</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12" /><circle cx="6.5" cy="18.5" r="2.5" /><circle cx="17.5" cy="16.5" r="2.5" /></svg>
-            </div>
-            <h3 class="card__title">Patrol radio &amp; DJ queue</h3>
-            <p class="card__text">Off-duty listening rooms with a shared queue. No music bots to babysit, no tokens to steal.</p>
-            <span class="badge badge--beta">Beta</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></svg>
-            </div>
-            <h3 class="card__title">Native desktop app</h3>
-            <p class="card__text">Download it, run it, done — background audio, push-to-talk, and a tray icon between calls. Mobile is next.</p>
-            <span class="badge badge--live">Live</span>
-          </article>
-
-          <article class="card reveal">
-            <div class="card__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9c0 1.6.42 3.11 1.16 4.4L3 21l4.78-1.05" /><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" stroke-width="2.4" /></svg>
-            </div>
-            <h3 class="card__title">Free forever</h3>
-            <p class="card__text">Every feature, every quality tier, every member. Funded by optional cosmetics — never by locking your voice.</p>
-            <span class="badge badge--live">Live</span>
+          <article class="plan plan--pro reveal">
+            <p class="plan__flag">Most popular</p>
+            <h3 class="plan__name">Pro</h3>
+            <p class="plan__price">$4.99<span>/month</span></p>
+            <ul class="plan__list">
+              <li>Studio-grade, realistic voices</li>
+              <li>30+ premium voice packs</li>
+              <li>Custom voice profiles — pitch, pace, accent</li>
+              <li>Everything in Free</li>
+              <li>Priority support &amp; early features</li>
+            </ul>
+            <a class="btn btn--primary plan__cta" href="#download">Go Pro</a>
           </article>
         </div>
+
+        <p class="table-note reveal">Cancel anytime. Pro funds development — the features that matter stay free forever.</p>
       </div>
     </section>
 
@@ -210,7 +164,6 @@
     <section class="section section--alt" id="compare">
       <div class="container">
         <header class="section__head reveal">
-          <p class="chip chip--label">Compare</p>
           <h2 class="section__title">Atlas vs. Discord VCs</h2>
           <p class="section__sub">Same job, none of the friction. Here's the honest scoreboard.</p>
         </header>
@@ -267,7 +220,7 @@
               </tr>
               <tr>
                 <td>Price</td>
-                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Free forever</td>
+                <td class="table__hl"><svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7" /></svg> Free forever &middot; Pro optional</td>
                 <td>$9.99/mo to unlock it all</td>
               </tr>
             </tbody>
@@ -282,9 +235,8 @@
     <section class="section" id="faq">
       <div class="container container--narrow">
         <header class="section__head reveal">
-          <p class="chip chip--label">FAQ</p>
           <h2 class="section__title">Frequently asked questions</h2>
-          <p class="section__sub">Everything else, ask us in the beta.</p>
+          <p class="section__sub">Everything else, answered below.</p>
         </header>
 
         <div class="faq reveal">
@@ -317,7 +269,7 @@
               Is it really free?
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
             </button>
-            <div class="faq__a"><div class="faq__a-inner"><p>Yes. Radio suite, department rooms, TTS connector, music rooms, roles — every core feature is free forever. We'll eventually sell optional cosmetics (profile flair, room themes), never features or quality.</p></div></div>
+            <div class="faq__a"><div class="faq__a-inner"><p>Yes — every core feature is free forever. Atlas Pro ($4.99/mo) is optional and adds studio-grade, realistic TTS voices, custom voice profiles, and priority support. We never lock the features that matter.</p></div></div>
           </div>
 
           <div class="faq__item">
@@ -388,7 +340,7 @@
         <span>Atlas</span>
       </a>
       <nav class="footer__links" aria-label="Footer">
-        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
         <a href="#compare">Compare</a>
         <a href="#faq">FAQ</a>
         <a href="https://github.com/whoisbrzy/Atlas-Radio" target="_blank" rel="noopener">GitHub</a>
