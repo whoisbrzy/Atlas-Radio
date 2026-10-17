@@ -41,6 +41,10 @@
       </div>
 
       <div class="nav__actions">
+        <a class="btn btn--ghost btn--small nav__login" id="discordLogin" href="#" aria-label="Log in with Discord">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.6 1.25a18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.04.03C.53 9.05-.32 13.58.1 18.06c0 .02.02.05.04.06a19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.1 13 13 0 0 1-1.87-.9.08.08 0 0 1-.01-.12c.13-.1.25-.19.37-.29a.07.07 0 0 1 .08 0 14.2 14.2 0 0 0 12.06 0 .07.07 0 0 1 .08 0c.12.1.25.2.37.3a.08.08 0 0 1 0 .12 12.3 12.3 0 0 1-1.88.9.08.08 0 0 0-.04.1c.36.7.77 1.36 1.22 1.99a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.02-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg>
+          <span>Log in</span>
+        </a>
         <a class="btn btn--primary btn--small" href="#download">Download</a>
         <button class="nav__burger" id="navBurger" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
@@ -54,7 +58,7 @@
     <!-- ============ HERO ============ -->
     <section class="hero">
       <div class="hero__bg" aria-hidden="true"></div>
-      <div class="hero__blinds" data-gradient-blinds data-colors="#ffcf9e,#ff8a5c,#ff4a1c,#b12d0c" data-angle="20" aria-hidden="true"></div>
+      <div class="hero__terminal" data-faulty-terminal data-tint="#ff4a1c" aria-hidden="true"></div>
       <div class="hero__shade" aria-hidden="true"></div>
 
       <div class="hero__inner container">
@@ -115,6 +119,44 @@
           <span class="marquee__item" aria-hidden="true">Signal 100</span>
           <span class="marquee__item" aria-hidden="true">10-8 Roleplay</span>
           <span class="marquee__item" aria-hidden="true">Nightwatch RP</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REVIEWS ============ -->
+    <section class="section" id="reviews">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2 class="section__title">Word on the radio</h2>
+          <p class="section__sub">What ER:LC roleplayers say after a shift on Atlas.</p>
+        </header>
+
+        <div class="bounce-cards reveal" data-bounce-cards aria-label="Reviews from ER:LC roleplayers">
+          <figure class="review-card" tabindex="0">
+            <div class="review-card__stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <blockquote>"Zero crosstalk during pursuits. The priority PTT is the real deal."</blockquote>
+            <figcaption>Marcus &middot; Liberty State RP</figcaption>
+          </figure>
+          <figure class="review-card" tabindex="0">
+            <div class="review-card__stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <blockquote>"The TTS connector means I never touch my mic. My officers can't tell."</blockquote>
+            <figcaption>Jamie &middot; Code 4 RP</figcaption>
+          </figure>
+          <figure class="review-card" tabindex="0">
+            <div class="review-card__stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <blockquote>"Replaced our whole Discord VC setup in one shift."</blockquote>
+            <figcaption>Alex &middot; Nightwatch RP</figcaption>
+          </figure>
+          <figure class="review-card" tabindex="0">
+            <div class="review-card__stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <blockquote>"Channel scanning changed how we run dispatch. Genuinely."</blockquote>
+            <figcaption>Reyes &middot; 10-8 Roleplay</figcaption>
+          </figure>
+          <figure class="review-card" tabindex="0">
+            <div class="review-card__stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <blockquote>"Departments set up in ten minutes. No permission spaghetti."</blockquote>
+            <figcaption>T. Nguyen &middot; County Line RP</figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -349,7 +391,10 @@
     </div>
   </footer>
 
-  <script src="gradient-blinds.js"></script>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="faulty-terminal.js"></script>
+  <script src="bounce-cards.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
