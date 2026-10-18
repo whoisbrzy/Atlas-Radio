@@ -12,3 +12,16 @@
 .window-titlebar-spacer{width:52px}
 .workspace{min-height:calc(100vh - 98px)}
 .signin-screen{grid-template-rows:36px auto 1fr auto}
+.eyebrow,.signin-app-label,.signin-footer{font-family:"SF Pro Display","SF Pro Text","SF Compact Display","SF Compact Text",sans-serif;letter-spacing:.075em}
+.update-notice{position:fixed;z-index:20;top:48px;right:22px;width:min(440px,calc(100vw - 36px));display:flex;align-items:center;gap:13px;padding:17px 16px;border:1px solid #ffffff1c;border-radius:14px;background:rgba(24,25,28,.96);box-shadow:0 20px 60px #0008,0 0 24px #ff4a1c12;backdrop-filter:blur(18px);color:#f5f5f7}
+.update-icon{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1px solid #ff4a1c48;border-radius:11px;background:#ff4a1c18;color:#ff633c}
+.update-copy{min-width:0;flex:1;display:grid;gap:4px;padding-right:4px}
+.update-copy strong{font-size:13px;font-weight:650;letter-spacing:-.01em}
+.update-copy>span{color:#a5a5ae;font-size:11px;line-height:1.45}
+.update-dismiss{position:absolute;right:8px;top:8px;width:22px;height:22px;display:grid;place-items:center;padding:0;border:0;border-radius:6px;background:transparent;color:#777982;cursor:pointer}
+.update-dismiss:hover{background:#ffffff12;color:#f5f5f7}
+.update-action{flex:none;max-width:120px;padding:8px 10px;border:1px solid #ff613b55;border-radius:8px;background:#ff4a1c;color:white;font-size:10px;font-weight:650;cursor:pointer}
+.update-action:hover:not(:disabled){background:#ff6340}
+.update-action:disabled{opacity:.65;cursor:progress}
+.update-progress{height:3px;margin-top:5px;overflow:hidden;border-radius:4px;background:#ffffff18}
+.update-progress b{display:block;height:100%;border-radius:4px;background:#ff4a1c;transition:width .2s}

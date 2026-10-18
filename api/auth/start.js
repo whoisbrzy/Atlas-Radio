@@ -7,15 +7,20 @@ module.exports = (req, res) => {
   }
   const origin = getOrigin(req);
   const state = String(req.query.state || "");
-  const challenge = String(req.query.challenge || "");
-  const verifier = String(req.query.verifier || "");
+  const desktop = String(req.query.desktop || "") === "1";
+  const verifier = desktop ? crypto.randomBytes(32).toString("hex") : String(req.query.verifier || "");
+  const challenge = desktop
+    ? crypto.createHash("sha256").update(verifier).digest("base64url")
+    : String(req.query.challenge || "");
   if (!/^[\w-]{16,128}$/.test(state) || !/^[A-Za-z0-9_-]{43}$/.test(challenge) || !/^[a-f0-9]{64}$/.test(verifier)) {
     return res.status(400).json({ error: "invalid_oauth_request" });
   }
   const expected = crypto.createHash("sha256").update(verifier).digest("base64url");
   if (expected !== challenge) return res.status(400).json({ error: "invalid_pkce" });
   // Discord returns through /auth/callback, so the cookie must cover that route.
-  res.setHeader("Set-Cookie", `atlas_pkce=${verifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
+  const cookies = [`atlas_pkce=${verifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`];
+  if (desktop) cookies.push(`atlas_desktop=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
+  res.setHeader("Set-Cookie", cookies);
   const redirect = `${origin}/auth/callback`;
   const query = new URLSearchParams({
     client_id: clientId,

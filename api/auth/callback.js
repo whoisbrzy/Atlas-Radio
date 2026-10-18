@@ -6,21 +6,22 @@ module.exports = async (req, res) => {
   const redirectUri = `${origin}/auth/callback`;
   const returnTo = origin;
   const state = String(query.state || "");
+  const desktop = Boolean(state && req.cookies && req.cookies.atlas_desktop === state);
 
   if (query.error || !query.code || !state) {
-    return redirectError(res, returnTo, state, "discord_denied");
+    return redirectError(res, returnTo, state, "discord_denied", desktop);
   }
 
   const clientId = process.env.DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     console.error("Discord OAuth is missing DISCORD_CLIENT_ID or DISCORD_CLIENT_SECRET.");
-    return redirectError(res, returnTo, state, "oauth_not_configured");
+    return redirectError(res, returnTo, state, "oauth_not_configured", desktop);
   }
 
   // Vercel exposes cookies on req.cookies; this value is set by /api/auth/start.
   const verifier = req.cookies && req.cookies.atlas_pkce;
-  if (!verifier) return redirectError(res, returnTo, state, "oauth_session_expired");
+  if (!verifier) return redirectError(res, returnTo, state, "oauth_session_expired", desktop);
 
   try {
     const body = new URLSearchParams({
@@ -46,14 +47,19 @@ module.exports = async (req, res) => {
     })).toString("base64url");
     const signature = crypto.createHmac("sha256", clientSecret).update(payload).digest("base64url");
     const session = `${payload}.${signature}`;
-    res.setHeader("Set-Cookie", [
+    const cookies = [
       `atlas_pkce=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
       `atlas_session=${session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(30, Number(tokens.expires_in) || 3600)}`
-    ]);
+    ];
+    if (desktop) cookies.push("atlas_desktop=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0");
+    res.setHeader("Set-Cookie", cookies);
+    if (desktop) {
+      return res.redirect(302, `atlas-radio://auth/callback?atlas_session=${encodeURIComponent(session)}&state=${encodeURIComponent(state)}`);
+    }
     return res.redirect(302, `${returnTo}?atlas_session=1&state=${encodeURIComponent(state)}`);
   } catch (error) {
     console.error("Discord OAuth callback failed:", error.message);
-    return redirectError(res, returnTo, state, "oauth_exchange_failed");
+    return redirectError(res, returnTo, state, "oauth_exchange_failed", desktop);
   }
 };
 
@@ -63,6 +69,9 @@ function getOrigin(req) {
   return `${proto.split(",")[0].trim()}://${String(host).split(",")[0].trim()}`;
 }
 
-function redirectError(res, returnTo, state, error) {
+function redirectError(res, returnTo, state, error, desktop) {
+  if (desktop) {
+    return res.redirect(302, `atlas-radio://auth/callback?atlas_error=${encodeURIComponent(error)}&state=${encodeURIComponent(state)}`);
+  }
   return res.redirect(302, `${returnTo}?atlas_error=${encodeURIComponent(error)}&state=${encodeURIComponent(state)}`);
 }

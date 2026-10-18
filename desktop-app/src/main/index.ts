@@ -1,16 +1,111 @@
 import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { spawn } from 'node:child_process'
 import { readFile, unlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
+import { autoUpdater } from 'electron-updater'
 
 const MAX_SPEECH_CHARACTERS = 500
 const AUTH_ORIGIN = 'https://atlasvc.vercel.app'
+const APP_PROTOCOL = 'atlas-radio:'
 type DiscordProfile = { id: string; username: string; globalName: string; avatarUrl: string | null }
 let mainWindow: BrowserWindow | null = null
-let loginWindow: BrowserWindow | null = null
+let pendingLoginState: string | null = null
+let pendingLoginTimer: NodeJS.Timeout | null = null
+let queuedAuthResult: { profile: DiscordProfile } | { error: string } | null = null
+let rendererReady = false
+type UpdateStatus = { state: 'available' | 'downloading' | 'downloaded' | 'error' | 'not-available'; version?: string; percent?: number; message?: string }
+let updateStatus: UpdateStatus | null = null
+
+function publishUpdateStatus(status: UpdateStatus | null) {
+  updateStatus = status
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update:status', status)
+}
+
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = false
+autoUpdater.on('update-available', info => publishUpdateStatus({ state: 'available', version: info.version }))
+autoUpdater.on('update-not-available', () => publishUpdateStatus({ state: 'not-available' }))
+autoUpdater.on('download-progress', progress => publishUpdateStatus({ state: 'downloading', percent: Math.round(progress.percent) }))
+autoUpdater.on('update-downloaded', info => publishUpdateStatus({ state: 'downloaded', version: info.version }))
+autoUpdater.on('error', error => publishUpdateStatus({ state: 'error', message: error.message }))
+
+const hasSingleInstanceLock = app.requestSingleInstanceLock()
+if (!hasSingleInstanceLock) app.quit()
+
+function deliverAuthResult(result: { profile: DiscordProfile } | { error: string }) {
+  if (!mainWindow || mainWindow.isDestroyed() || !rendererReady || mainWindow.webContents.isLoading()) {
+    queuedAuthResult = result
+    return
+  }
+  mainWindow.webContents.send('discord:auth-result', result)
+}
+
+async function handleDesktopCallback(rawUrl: string) {
+  let callback: URL
+  try { callback = new URL(rawUrl) } catch { return }
+  if (callback.protocol !== APP_PROTOCOL || callback.hostname !== 'auth' || callback.pathname !== '/callback') return
+  const returnedState = callback.searchParams.get('state')
+  if (!pendingLoginState || returnedState !== pendingLoginState) return
+  pendingLoginState = null
+  if (pendingLoginTimer) clearTimeout(pendingLoginTimer)
+  pendingLoginTimer = null
+
+  const error = callback.searchParams.get('atlas_error')
+  if (error) {
+    const messages: Record<string, string> = {
+      discord_denied: 'Discord sign-in was cancelled.',
+      oauth_not_configured: 'Discord sign-in is not configured for Atlas yet.',
+      oauth_session_expired: 'Sign-in timed out. Please try again.',
+      oauth_exchange_failed: 'Discord sign-in failed. Please try again.'
+    }
+    deliverAuthResult({ error: messages[error] || 'Discord sign-in failed.' })
+    return
+  }
+
+  const token = callback.searchParams.get('atlas_session') || ''
+  const [payload] = token.split('.')
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) {
+    deliverAuthResult({ error: 'Atlas did not return a valid sign-in session. Please try again.' })
+    return
+  }
+
+  try {
+    const sessionData = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as { exp?: unknown }
+    if (typeof sessionData.exp !== 'number' || sessionData.exp <= Date.now()) throw new Error('Sign-in session expired. Please try again.')
+    await discordAuthSession().cookies.set({
+      url: AUTH_ORIGIN,
+      name: 'atlas_session',
+      value: token,
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'lax',
+      expirationDate: Math.floor(sessionData.exp / 1000)
+    })
+    const profile = await requestDiscordProfile()
+    if (!profile) throw new Error('Atlas could not verify the Discord session. Please try again.')
+    deliverAuthResult({ profile })
+  } catch (callbackError) {
+    deliverAuthResult({ error: callbackError instanceof Error ? callbackError.message : 'Discord sign-in failed.' })
+  }
+}
+
+if (hasSingleInstanceLock) {
+  app.on('second-instance', (_event, commandLine) => {
+    const link = commandLine.find(argument => argument.startsWith(APP_PROTOCOL))
+    if (link) void handleDesktopCallback(link)
+    if (mainWindow?.isMinimized()) mainWindow.restore()
+    mainWindow?.show()
+    mainWindow?.focus()
+  })
+  app.on('open-url', (event, link) => {
+    event.preventDefault()
+    void handleDesktopCallback(link)
+  })
+}
 
 function appWindowFor(event: Electron.IpcMainInvokeEvent) {
   if (!mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents) return null
@@ -26,6 +121,23 @@ ipcMain.handle('window:toggle-maximize', event => {
   if (target.isMaximized()) target.unmaximize()
   else target.maximize()
   return target.isMaximized()
+})
+
+ipcMain.handle('update:status', event => {
+  const target = appWindowFor(event)
+  if (target && updateStatus) target.webContents.send('update:status', updateStatus)
+})
+ipcMain.handle('update:check', event => {
+  if (!appWindowFor(event) || !app.isPackaged) return
+  return autoUpdater.checkForUpdates()
+})
+ipcMain.handle('update:download', event => {
+  if (!appWindowFor(event)) return
+  return autoUpdater.downloadUpdate()
+})
+ipcMain.handle('update:install', event => {
+  if (!appWindowFor(event)) return
+  autoUpdater.quitAndInstall(false, true)
 })
 
 function discordAuthSession() {
@@ -63,6 +175,15 @@ ipcMain.handle('network:check', async () => {
   } catch { return false }
 })
 
+ipcMain.handle('renderer:ready', event => {
+  if (!appWindowFor(event)) return
+  rendererReady = true
+  if (queuedAuthResult) {
+    mainWindow?.webContents.send('discord:auth-result', queuedAuthResult)
+    queuedAuthResult = null
+  }
+})
+
 ipcMain.handle('discord:profile', () => requestDiscordProfile())
 ipcMain.handle('speech:open-settings', async () => {
   if (process.platform !== 'win32') throw new Error('Windows speech settings are only available on Windows.')
@@ -78,12 +199,9 @@ ipcMain.handle('discord:logout', async () => {
   ])
 })
 
-ipcMain.handle('discord:login', async () => {
-  if (loginWindow && !loginWindow.isDestroyed()) {
-    loginWindow.focus()
-    return
-  }
-
+ipcMain.handle('discord:login', async event => {
+  if (!appWindowFor(event)) throw new Error('Atlas window is unavailable. Restart the app and try again.')
+  if (pendingLoginState) throw new Error('Discord sign-in is already open in your browser.')
   const authSession = discordAuthSession()
   const configResponse = await authSession.fetch(`${AUTH_ORIGIN}/api/config`)
   if (!configResponse.ok) throw new Error('Could not load Atlas sign-in settings.')
@@ -92,78 +210,25 @@ ipcMain.handle('discord:login', async () => {
     throw new Error('Discord sign-in is not configured for Atlas yet.')
   }
 
-  const verifier = randomBytes(32).toString('hex')
-  const challenge = createHash('sha256').update(verifier).digest('base64url')
   const state = randomBytes(24).toString('hex')
   const startUrl = new URL('/api/auth/start', AUTH_ORIGIN)
   startUrl.searchParams.set('state', state)
-  startUrl.searchParams.set('challenge', challenge)
-  startUrl.searchParams.set('verifier', verifier)
-
-  let completed = false
-  loginWindow = new BrowserWindow({
-    width: 520,
-    height: 740,
-    minWidth: 420,
-    minHeight: 600,
-    parent: mainWindow || undefined,
-    modal: Boolean(mainWindow),
-    title: 'Sign in with Discord',
-    backgroundColor: '#111318',
-    autoHideMenuBar: true,
-    webPreferences: { partition: 'persist:atlas-discord-auth', contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged }
-  })
-  const currentLoginWindow = loginWindow
-  currentLoginWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-  currentLoginWindow.webContents.on('will-navigate', (event, target) => {
-    try {
-      const url = new URL(target)
-      if (url.origin !== AUTH_ORIGIN && url.origin !== 'https://discord.com') event.preventDefault()
-    } catch { event.preventDefault() }
-  })
-  currentLoginWindow.webContents.on('will-redirect', (event, target) => {
-    try {
-      const url = new URL(target)
-      if (url.origin !== AUTH_ORIGIN && url.origin !== 'https://discord.com') {
-        event.preventDefault()
-        return
-      }
-      if (url.origin !== AUTH_ORIGIN || url.pathname !== '/' ||
-          (!url.searchParams.has('atlas_session') && !url.searchParams.has('atlas_error'))) return
-      event.preventDefault()
-      completed = true
-      void (async () => {
-        const returnedState = url.searchParams.get('state')
-        if (returnedState !== state) {
-          mainWindow?.webContents.send('discord:auth-result', { error: 'Sign-in verification failed. Please try again.' })
-          return
-        }
-        const error = url.searchParams.get('atlas_error')
-        if (error) {
-          const messages: Record<string, string> = {
-            discord_denied: 'Discord sign-in was cancelled.',
-            oauth_not_configured: 'Discord sign-in is not configured for Atlas yet.',
-            oauth_session_expired: 'Sign-in timed out. Please try again.',
-            oauth_exchange_failed: 'Discord sign-in failed. Please try again.'
-          }
-          mainWindow?.webContents.send('discord:auth-result', { error: messages[error] || 'Discord sign-in failed.' })
-          return
-        }
-        try {
-          const profile = await requestDiscordProfile()
-          if (!profile) throw new Error('Atlas could not verify the Discord session. Please try again.')
-          mainWindow?.webContents.send('discord:auth-result', { profile })
-        } catch (error) {
-          mainWindow?.webContents.send('discord:auth-result', { error: error instanceof Error ? error.message : 'Discord sign-in failed.' })
-        }
-      })().finally(() => currentLoginWindow.close())
-    } catch { /* Ignore unrelated redirects. */ }
-  })
-  currentLoginWindow.on('closed', () => {
-    loginWindow = null
-    if (!completed) mainWindow?.webContents.send('discord:auth-result', { error: 'Sign-in window closed.' })
-  })
-  await currentLoginWindow.loadURL(startUrl.toString())
+  startUrl.searchParams.set('desktop', '1')
+  pendingLoginState = state
+  try {
+    await shell.openExternal(startUrl.toString())
+    pendingLoginTimer = setTimeout(() => {
+      pendingLoginState = null
+      pendingLoginTimer = null
+      deliverAuthResult({ error: 'Sign-in timed out. Please try again.' })
+    }, 10 * 60 * 1000)
+  }
+  catch (error) {
+    pendingLoginState = null
+    if (pendingLoginTimer) clearTimeout(pendingLoginTimer)
+    pendingLoginTimer = null
+    throw new Error(error instanceof Error ? `Could not open your browser: ${error.message}` : 'Could not open your browser.')
+  }
 })
 
 function runPowerShell(script: string, environment: Record<string, string> = {}) {
@@ -260,6 +325,7 @@ function createWindow() {
   mainWindow.on('maximize', () => mainWindow?.webContents.send('window:state-changed', true))
   mainWindow.on('unmaximize', () => mainWindow?.webContents.send('window:state-changed', false))
 
+  rendererReady = false
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   mainWindow.webContents.on('will-navigate', (event, target) => {
     const localDevUrl = process.env.ELECTRON_RENDERER_URL
@@ -279,10 +345,17 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (!hasSingleInstanceLock) return
+  if (process.defaultApp && process.argv[1]) {
+    app.setAsDefaultProtocolClient('atlas-radio', process.execPath, [resolve(process.argv[1])])
+  } else {
+    app.setAsDefaultProtocolClient('atlas-radio')
+  }
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
     callback(permission === 'speaker-selection' && details.isMainFrame && details.requestingUrl.startsWith('file://'))
   })
   createWindow()
+  if (app.isPackaged) setTimeout(() => { void autoUpdater.checkForUpdates().catch(error => publishUpdateStatus({ state: 'error', message: error instanceof Error ? error.message : 'Could not check for updates.' })) }, 5000)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

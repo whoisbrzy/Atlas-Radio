@@ -54,6 +54,8 @@ const VOICE_STYLES = {
 } as const
 
 function App() {
+  const [updateStatus, setUpdateStatus] = useState<AtlasUpdateStatus | null>(null)
+  const [updateDismissed, setUpdateDismissed] = useState(false)
   const [section, setSection] = useState<Section>('Radio Desk')
   const [text, setText] = useState('')
   const [department, setDepartment] = useState<Department>('Police')
@@ -114,6 +116,21 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const unsubscribe = window.atlasDesktop.onUpdateStatus(status => {
+      setUpdateStatus(status)
+      if (status?.state === 'available') setUpdateDismissed(false)
+    })
+    void window.atlasDesktop.getUpdateStatus()
+    return unsubscribe
+  }, [])
+
+  async function handleUpdateAction() {
+    if (updateStatus?.state === 'downloaded') return window.atlasDesktop.installUpdate()
+    if (updateStatus?.state === 'error') return window.atlasDesktop.checkForUpdates()
+    return window.atlasDesktop.downloadUpdate()
+  }
+
+  useEffect(() => {
     let mounted = true
     let checking = false
     const checkInternet = async () => {
@@ -152,6 +169,7 @@ function App() {
         setAuthMessage(result.error)
       }
     })
+    void window.atlasDesktop.rendererReady()
     return () => { mounted = false; unsubscribe() }
   }, [])
 
@@ -377,6 +395,7 @@ function App() {
   if (internetStatus !== 'online' || !authReady || !discordProfile) {
     return (
       <div className="signin-screen">
+        <UpdateNotice status={updateStatus} dismissed={updateDismissed} onDismiss={() => setUpdateDismissed(true)} onAction={() => void handleUpdateAction()} />
         <WindowTitleBar maximized={windowMaximized} onMaximizedChange={setWindowMaximized} />
         <div className="signin-terminal" data-faulty-terminal data-tint="#ff4a1c" aria-hidden="true" />
         <div className="signin-shade" aria-hidden="true" />
@@ -398,6 +417,7 @@ function App() {
 
   return (
     <div className="app-frame">
+      <UpdateNotice status={updateStatus} dismissed={updateDismissed} onDismiss={() => setUpdateDismissed(true)} onAction={() => void handleUpdateAction()} />
       <WindowTitleBar maximized={windowMaximized} onMaximizedChange={setWindowMaximized} />
       <header className="appbar">
         <div className="brand"><img src={atlasLogo} alt="" /><span><strong>ATLAS</strong><small>RADIO DESK</small></span></div>
@@ -472,6 +492,22 @@ function App() {
       </div>
     </div>
   )
+}
+
+function UpdateNotice({ status, dismissed, onDismiss, onAction }: { status: AtlasUpdateStatus | null; dismissed: boolean; onDismiss: () => void; onAction: () => void }) {
+  if (!status || dismissed || status.state === 'not-available') return null
+  const title = status.state === 'downloaded' ? 'Update ready' : status.state === 'downloading' ? 'Updating Atlas' : status.state === 'error' ? 'Update paused' : 'Atlas update available'
+  const description = status.state === 'downloaded' ? `Version ${status.version || 'new'} is ready to install.`
+    : status.state === 'downloading' ? `Downloading the update… ${status.percent ?? 0}%`
+      : status.state === 'error' ? status.message || 'Could not check for updates. Try again.'
+        : `Version ${status.version || 'new'} is ready. Update now; Atlas will restart when it’s installed.`
+  const actionLabel = status.state === 'downloaded' ? 'Restart & update' : status.state === 'downloading' ? 'Downloading…' : status.state === 'error' ? 'Try again' : 'Update now'
+  return <aside className="update-notice" role="status" aria-live="polite">
+    <button className="update-dismiss" onClick={onDismiss} aria-label="Dismiss update notice" title="Close"><X size={15} /></button>
+    <span className="update-icon"><Radio size={17} /></span>
+    <div className="update-copy"><strong>{title}</strong><span>{description}</span>{status.state === 'downloading' && <i className="update-progress"><b style={{ width: `${Math.max(0, Math.min(100, status.percent ?? 0))}%` }} /></i>}</div>
+    <button className="update-action" disabled={status.state === 'downloading'} onClick={onAction}>{actionLabel}</button>
+  </aside>
 }
 
 function WindowTitleBar({ maximized, onMaximizedChange }: { maximized: boolean; onMaximizedChange: (maximized: boolean) => void }) {

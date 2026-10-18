@@ -70,8 +70,9 @@ If Windows reports that the selected output disappeared, Atlas stops speech and
 offers a reconnect action. Generated audio remains local to the computer.
 
 Atlas verifies an active connection to its sign-in service before opening the
-radio desk, and rechecks periodically while running. Speech remains local, but
-account verification and Discord sign-in require the internet. In **Audio Setup**,
+radio desk, and rechecks periodically while running. Discord sign-in opens in your
+default browser and returns to Atlas through its `atlas-radio://` app link. Speech
+remains local, but account verification and Discord sign-in require the internet. In **Audio Setup**,
 choose a Windows voice, select a Natural/Dispatch/Calm/Urgent profile, or tune
 pace and pitch. Use **Add Windows voices** to open Windows speech settings, then
 refresh the list after installing additional system voices. Voice tuning is saved
