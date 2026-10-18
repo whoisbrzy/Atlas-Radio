@@ -53,6 +53,13 @@ const VOICE_STYLES = {
   Custom: null,
 } as const
 
+function mergePresets(defaults: PhrasePreset[], configured: PhrasePreset[]) {
+  const overrides = new Map(configured.map(preset => [preset.id, preset]))
+  const merged = defaults.map(preset => overrides.get(preset.id) || preset)
+  const defaultIds = new Set(defaults.map(preset => preset.id))
+  return [...merged, ...configured.filter(preset => !defaultIds.has(preset.id))]
+}
+
 function App() {
   const [updateStatus, setUpdateStatus] = useState<AtlasUpdateStatus | null>(null)
   const [updateDismissed, setUpdateDismissed] = useState(false)
@@ -84,6 +91,10 @@ function App() {
   const [speaking, setSpeaking] = useState(false)
   const [speechStatus, setSpeechStatus] = useState('Choose the virtual cable as Atlas output and Discord input.')
   const [discordProfile, setDiscordProfile] = useState<DiscordProfile | null>(null)
+  const [accessibleServers, setAccessibleServers] = useState<AtlasDiscordServer[]>([])
+  const [activeServerId, setActiveServerId] = useState('')
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [audioOnboardingDone, setAudioOnboardingDone] = useState(() => localStorage.getItem('atlas-audio-onboarding-v1') === 'done')
   const [authReady, setAuthReady] = useState(false)
   const [authBusy, setAuthBusy] = useState(false)
   const [authMessage, setAuthMessage] = useState('')
@@ -193,6 +204,42 @@ function App() {
   }, [internetStatus])
 
   useEffect(() => {
+    if (!discordProfile || internetStatus !== 'online') return
+    if (localStorage.getItem('atlas-audio-onboarding-v1') !== 'done') {
+      setAudioOnboardingDone(false)
+      setSection('Audio Setup')
+    }
+    let mounted = true
+    window.atlasDesktop.getDiscordServers().then(servers => {
+      if (!mounted) return
+      setAccessibleServers(servers)
+      if (!servers.some(server => server.id === activeServerId)) setActiveServerId(servers[0]?.id || '')
+    }).catch(error => {
+      if (mounted) setSpeechStatus(error instanceof Error ? error.message : 'Could not load your Discord servers.')
+    })
+    return () => { mounted = false }
+  }, [discordProfile?.id, internetStatus])
+
+  useEffect(() => {
+    if (!discordProfile || !activeServerId) return
+    let mounted = true
+    window.atlasDesktop.getServerSettings(activeServerId).then(remote => {
+      if (!mounted || !remote) return
+      setCallsign(remote.callSign || '')
+      setIncludeCallsign(Boolean(remote.includeCallSign))
+      setSayOver(Boolean(remote.sayOver))
+      setCustomPresets(Array.isArray(remote.presets) ? remote.presets : [])
+      if (remote.voiceStyle in VOICE_STYLES) setVoiceStyle(remote.voiceStyle as keyof typeof VOICE_STYLES)
+      if (Number.isInteger(remote.voiceRate)) setVoiceRate(Math.max(-10, Math.min(10, remote.voiceRate)))
+      if (Number.isInteger(remote.voicePitch)) setVoicePitch(Math.max(-10, Math.min(10, remote.voicePitch)))
+      setSpeechStatus(`Loaded radio settings for ${accessibleServers.find(server => server.id === activeServerId)?.name || 'your server'}.`)
+    }).catch(error => {
+      if (mounted && !error.message.includes('not set up yet')) setSpeechStatus(error instanceof Error ? error.message : 'Could not load server settings.')
+    })
+    return () => { mounted = false }
+  }, [discordProfile?.id, activeServerId])
+
+  useEffect(() => {
     let mounted = true
     window.atlasDesktop.listVoices().then(installed => {
       if (!mounted) return
@@ -251,6 +298,11 @@ function App() {
       const device = await chooser.selectAudioOutput()
       setOutputDevice(device)
       setOutputConnected(true)
+      if (!audioOnboardingDone) {
+        localStorage.setItem('atlas-audio-onboarding-v1', 'done')
+        setAudioOnboardingDone(true)
+        setSection('Radio Desk')
+      }
       setSpeechStatus(device.label.toLowerCase().includes('cable input')
         ? 'Virtual cable selected. Select CABLE Output as your microphone in Discord.'
         : 'Output selected. Choose CABLE Input to route Atlas speech into Discord.')
@@ -386,6 +438,9 @@ function App() {
     try {
       await window.atlasDesktop.logoutDiscord()
       setDiscordProfile(null)
+      setAccessibleServers([])
+      setActiveServerId('')
+      setProfileMenuOpen(false)
       setAuthMessage('Signed out of Discord.')
     } catch {
       setAuthMessage('Could not sign out right now. Try again.')
@@ -423,8 +478,9 @@ function App() {
         <div className="brand"><img src={atlasLogo} alt="" /><span><strong>ATLAS</strong><small>RADIO DESK</small></span></div>
         <div className="appbar-divider" />
         <div className="appbar-context"><span className="live-dot" /> Desktop audio</div>
+        {accessibleServers.length > 0 && <label className="server-picker"><span>SERVER</span><select aria-label="Discord server" value={activeServerId} onChange={event => setActiveServerId(event.target.value)}>{accessibleServers.map(server => <option value={server.id} key={server.id}>{server.name}</option>)}</select></label>}
         <div className="appbar-spacer" />
-        <span className="app-version">DESKTOP · 0.2.1</span>
+        <span className="app-version">DESKTOP · 0.2.3</span>
       </header>
 
       <div className="workspace">
@@ -439,9 +495,11 @@ function App() {
           <div className="account-area">
             <div className="account-label">DISCORD ACCOUNT</div>
             {discordProfile ? <div className="account-card">
-              {discordProfile.avatarUrl ? <img className="account-avatar" src={discordProfile.avatarUrl} alt="" /> : <div className="account-avatar fallback-avatar">{discordProfile.username[0]?.toUpperCase() || 'D'}</div>}
-              <div className="account-details"><strong>{discordProfile.globalName}</strong><small>@{discordProfile.username}</small></div>
-              <button className="account-action" onClick={() => void signOutOfDiscord()} title="Sign out of Discord" aria-label="Sign out of Discord"><LogOut size={15} /></button>
+              <button className="account-profile-button" onClick={() => setProfileMenuOpen(value => !value)} aria-expanded={profileMenuOpen} aria-label="Open Discord profile options">
+                {discordProfile.avatarUrl ? <img className="account-avatar" src={discordProfile.avatarUrl} alt="" /> : <div className="account-avatar fallback-avatar">{discordProfile.username[0]?.toUpperCase() || 'D'}</div>}
+                <span className="account-details"><strong>{discordProfile.globalName}</strong><small>@{discordProfile.username}</small></span>
+              </button>
+              {profileMenuOpen && <div className="account-menu"><button onClick={() => { setSection('Audio Setup'); setProfileMenuOpen(false) }}>User Settings</button><button onClick={() => void signOutOfDiscord()}><LogOut size={14} /> Log out</button></div>}
             </div> : <div className="account-signin">
               <p>{authMessage || 'Sign in to show your Discord profile in Atlas.'}</p>
               <button className="discord-login btn btn--primary" onClick={() => void signInWithDiscord()} disabled={authBusy}><DiscordMark />{authBusy ? 'Waiting for Discord…' : 'Sign in with Discord'}</button>
@@ -457,11 +515,13 @@ function App() {
             {section === 'Radio Desk' && <div className={`route-indicator ${outputConnected ? 'connected' : ''}`}><span />{outputConnected ? 'Audio route ready' : 'Audio route needs setup'}</div>}
           </div>
 
+          {section === 'Audio Setup' && !audioOnboardingDone && <section className="audio-onboarding"><span>01</span><div><strong>Let’s get your audio ready</strong><p>Choose the Atlas playback device, then make sure Discord uses its matching virtual-cable microphone. Your first setup starts here after sign-in.</p></div><button className="outline-button btn btn--ghost btn--small" onClick={() => void chooseOutput()}>{outputConnected ? 'Change output' : 'Choose output'}</button></section>}
+
           {section === 'Radio Desk' ? <div className="desk-layout">
             <section className="panel presets-panel">
               <div className="panel-heading"><div><h2>Quick phrases</h2><p>Choose your department, then load a phrase.</p></div></div>
               <div className="department-tabs" role="tablist" aria-label="Department presets">{(Object.keys(DEFAULT_PRESETS) as Department[]).map(item => <button key={item} role="tab" aria-selected={department === item} className={department === item ? 'selected' : ''} onClick={() => setDepartment(item)}>{item}</button>)}</div>
-              <div className="preset-grid">{[...DEFAULT_PRESETS[department], ...customPresets].map(preset => <div className="preset-item" key={preset.id}><button className="preset-button" title={preset.text} onClick={() => { setText(preset.text.slice(0, 500)); setSpeechStatus(`Loaded “${preset.label}”. Hold to speak when ready.`) }}><strong>{preset.label}</strong><span>{preset.text}</span></button>{customPresets.some(item => item.id === preset.id) && <button className="preset-remove" aria-label={`Delete ${preset.label}`} title="Delete custom preset" onClick={() => setCustomPresets(current => current.filter(item => item.id !== preset.id))}><Trash2 size={14} /></button>}</div>)}</div>
+              <div className="preset-grid">{mergePresets(DEFAULT_PRESETS[department], customPresets).map(preset => <div className="preset-item" key={preset.id}><button className="preset-button" title={preset.text} onClick={() => { setText(preset.text.slice(0, 500)); setSpeechStatus(`Loaded “${preset.label}”. Hold to speak when ready.`) }}><strong>{preset.label}</strong><span>{preset.text}</span></button>{customPresets.some(item => item.id === preset.id) && <button className="preset-remove" aria-label={`Delete ${preset.label}`} title="Delete custom preset" onClick={() => setCustomPresets(current => current.filter(item => item.id !== preset.id))}><Trash2 size={14} /></button>}</div>)}</div>
               <div className="radio-tools"><label className="call-sign-field"><span>UNIT / CALLSIGN</span><input value={callsign} onChange={event => setCallsign(event.target.value.slice(0, 40))} placeholder="e.g. Unit 421" maxLength={40} /></label><label className="radio-check"><input type="checkbox" checked={includeCallsign} onChange={event => setIncludeCallsign(event.target.checked)} /> Read callsign</label><label className="radio-check"><input type="checkbox" checked={sayOver} onChange={event => setSayOver(event.target.checked)} /> End with “over”</label></div>
             </section>
 

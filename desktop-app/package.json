@@ -1,6 +1,6 @@
 {
   "name": "atlas-desktop",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "description": "Local text-to-speech audio routing for Discord desktop",
   "author": {

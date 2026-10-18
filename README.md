@@ -49,7 +49,15 @@ To enable it:
    `https://YOUR-VERCEL-DOMAIN/auth/callback` under **OAuth2 → Redirects**.
    Add a separate callback URL for each Vercel/custom domain you use.
 
-After sign-in, the button shows the user's avatar + display name; clicking it logs out.
+After sign-in, the button shows the user's avatar + display name and opens the account menu.
+
+The account menu opens the server dashboard at `/dashboard`. It lists servers available
+to the signed-in Discord account and lets you save personal callsign, voice profile,
+and phrase settings. The website and desktop app share these preferences through
+Vercel KV / Upstash REST storage. Add `KV_REST_API_URL` and `KV_REST_API_TOKEN` to
+Vercel to enable syncing. Sign in again after the Discord `guilds` scope is added.
+The dashboard only changes the current user's Atlas settings; it does not post to or
+modify Discord servers.
 
 ## Developer panel & bans
 
@@ -80,7 +88,9 @@ serverless function in `api/config.js`, so there's no build step.
    - `DISCORD_CLIENT_SECRET` — your Discord OAuth2 client secret (server-side only)
    - `DEVELOPER_IDS` — comma-separated Discord user IDs, e.g.
      `123456789012345678,987654321098765432`
-   - `BLOCKED_COUNTRIES` (optional) — comma-separated ISO country codes, e.g. `CN,RU`
+  - `BLOCKED_COUNTRIES` (optional) — comma-separated ISO country codes, e.g. `CN,RU`
+  - `KV_REST_API_URL` and `KV_REST_API_TOKEN` — Vercel KV / Upstash REST credentials
+    for server settings shared by the website dashboard and desktop app
 3. In the Discord developer portal (**OAuth2 → Redirects**), add the exact Vercel
    callback URL (e.g. `https://atlasvc.vercel.app/auth/callback`).
 
@@ -89,7 +99,8 @@ Add the matching local callback URL (typically `http://localhost:3000/auth/callb
 to Discord's OAuth2 Redirects. Discord login requires the Vercel functions; a
 plain static server serves the landing page but cannot complete sign-in.
 
-The developer page is available at `/developer` to signed-in developer accounts.
+The dashboard is available at `/dashboard` to signed-in Discord accounts. The
+developer page is available at `/developer` to signed-in developer accounts.
 Country access is enforced at Vercel's routing middleware using the incoming
 `x-vercel-ip-country` header; update `BLOCKED_COUNTRIES` in Vercel and redeploy
 to change the shared list.
@@ -109,8 +120,8 @@ The landing page's download buttons link there.
   Geist type, trusted-by marquee, fade-up motion. Close in feel, not a clone: Atlas keeps
   its own name, logo mark, copy, and section set.
 - Secondary reference: [melonly.com](https://melonly.com) (ER:LC landing-page rhythm).
-- Hero typography: **Pacifico** script accent (via Google Fonts) over the **Geist** sans,
-  with SF Pro first in the stack so Apple devices render SF Pro.
+- Website typography: SF Pro and SF Compact first in the system-font stack; no web fonts
+  are downloaded.
 - Positioning: a free desktop voice app for ER:LC roleplay communities. Not affiliated
   with PRC, ER:LC, or Roblox Corporation.
 

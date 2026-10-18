@@ -1,9 +1,9 @@
 /* ============================================================
    Solara — design system
    Token system + motion after chirper.app (black canvas, panel
-   cards with inset top highlight, flame accent, Geist, 36s
-   marquee, fade-up .32s cubic-bezier(.22,1,.36,1)).
-   Hero keeps Pacifico script accent + SF Pro/Geist display.
+   cards with inset top highlight, flame accent, SF Pro / SF Compact,
+   36s marquee, fade-up .32s cubic-bezier(.22,1,.36,1).
+   Apple system font families are preferred throughout.
    ============================================================ */
 
 :root {
@@ -38,10 +38,9 @@
   --lift-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 28px 56px -28px rgba(0, 0, 0, .95);
   --btn-shadow: 0 10px 24px -10px rgba(255, 74, 28, .55);
 
-  --font-sans: "Geist", "SF Pro Display", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-script: "Pacifico", "Brush Script MT", cursive;
+  --font-sans: "SF Pro Display", "SF Pro Text", "SF Compact Display", "SF Compact Text", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "SF Compact Text", "SF Compact Display", "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-script: "SF Pro Display", "SF Pro Text", "SF Compact Display", "SF Compact Text", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --fs-display: clamp(2.75rem, 7.5vw, 5.75rem);
   --fs-h2: clamp(1.875rem, 3.6vw, 2.875rem);
@@ -232,7 +231,7 @@ code {
 }
 .profile-menu__item:hover { background: var(--raised); color: var(--fg); }
 .profile-menu__item[hidden] { display: none; }
-.profile-menu__soon { margin-left: auto; color: var(--muted); font-size: .7rem; }
+.profile-menu__item + .profile-menu__item { border-top: 1px solid var(--line); }
 .profile-menu__logout { border-top: 1px solid var(--line); border-radius: 0 0 calc(var(--radius-lg) - 3px) calc(var(--radius-lg) - 3px); color: var(--muted); }
 
 .nav__burger {

@@ -185,6 +185,23 @@ ipcMain.handle('renderer:ready', event => {
 })
 
 ipcMain.handle('discord:profile', () => requestDiscordProfile())
+ipcMain.handle('dashboard:servers', async () => {
+  const response = await discordAuthSession().fetch(`${AUTH_ORIGIN}/api/discord/servers`, { credentials: 'include', cache: 'no-store' })
+  if (!response.ok) throw new Error(response.status === 401
+    ? 'Sign in to Discord again to load your servers.'
+    : response.status === 403
+      ? 'Sign out, then sign in again to grant Atlas access to your Discord servers.'
+      : 'Could not load your Discord servers.')
+  const data = await response.json() as { servers?: unknown }
+  return Array.isArray(data.servers) ? data.servers : []
+})
+ipcMain.handle('dashboard:settings', async (_event, guildId: unknown) => {
+  if (typeof guildId !== 'string' || !/^\d{15,22}$/.test(guildId)) throw new Error('Choose a valid Discord server.')
+  const response = await discordAuthSession().fetch(`${AUTH_ORIGIN}/api/dashboard/settings?guildId=${encodeURIComponent(guildId)}`, { credentials: 'include', cache: 'no-store' })
+  if (!response.ok) throw new Error(response.status === 503 ? 'Shared settings storage is not set up yet.' : 'Could not load this server’s Atlas settings.')
+  const data = await response.json() as { settings?: unknown }
+  return data.settings ?? null
+})
 ipcMain.handle('speech:open-settings', async () => {
   if (process.platform !== 'win32') throw new Error('Windows speech settings are only available on Windows.')
   await shell.openExternal('ms-settings:speech')

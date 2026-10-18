@@ -10,9 +10,6 @@
   <meta property="og:description" content="Download Atlas: radio nets, department rooms, and pursuit-proof latency for ER:LC communities — plus a TTS connector so you never use your real voice." />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/png" href="atlas-logo.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Pacifico&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -36,7 +33,8 @@
           <span>Log in</span>
         </button>
         <div class="profile-menu" id="profileMenu" hidden>
-          <a class="profile-menu__item" href="#download" data-dashboard title="The Atlas dashboard will be available when the app launches">Dashboard <span class="profile-menu__soon">Coming soon</span></a>
+          <a class="profile-menu__item" href="/dashboard" data-dashboard>Dashboard</a>
+          <a class="profile-menu__item" href="/dashboard#settings" data-user-settings>User Settings</a>
           <a class="profile-menu__item" href="/developer" data-developer hidden>Developer Panel</a>
           <button class="profile-menu__item profile-menu__logout" type="button" data-logout>Log out</button>
         </div>
@@ -94,26 +92,12 @@
     </section>
 
     <!-- ============ TRUSTED BY ============ -->
-    <section class="strip" aria-label="Communities using Atlas">
-      <p class="strip__label container">Powering voice on servers like</p>
+    <section class="strip" aria-label="Discord servers you can access">
+      <p class="strip__label container">Servers you can access</p>
       <div class="marquee">
         <div class="marquee__track">
-          <span class="marquee__item">Liberty State RP</span>
-          <span class="marquee__item">County Line Roleplay</span>
-          <span class="marquee__item">Code 4 RP</span>
-          <span class="marquee__item">Pursuit Community</span>
-          <span class="marquee__item">Northside RP</span>
-          <span class="marquee__item">Signal 100</span>
-          <span class="marquee__item">10-8 Roleplay</span>
-          <span class="marquee__item">Nightwatch RP</span>
-          <span class="marquee__item" aria-hidden="true">Liberty State RP</span>
-          <span class="marquee__item" aria-hidden="true">County Line Roleplay</span>
-          <span class="marquee__item" aria-hidden="true">Code 4 RP</span>
-          <span class="marquee__item" aria-hidden="true">Pursuit Community</span>
-          <span class="marquee__item" aria-hidden="true">Northside RP</span>
-          <span class="marquee__item" aria-hidden="true">Signal 100</span>
-          <span class="marquee__item" aria-hidden="true">10-8 Roleplay</span>
-          <span class="marquee__item" aria-hidden="true">Nightwatch RP</span>
+          <span class="marquee__item">Sign in to load your servers</span>
+          <span class="marquee__item" aria-hidden="true">Sign in to load your servers</span>
         </div>
       </div>
     </section>

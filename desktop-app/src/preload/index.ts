@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('atlasDesktop', {
     return () => ipcRenderer.removeListener('window:state-changed', listener)
   },
   getDiscordProfile: () => ipcRenderer.invoke('discord:profile') as Promise<DiscordProfile | null>,
+  getDiscordServers: () => ipcRenderer.invoke('dashboard:servers') as Promise<AtlasDiscordServer[]>,
+  getServerSettings: (guildId: string) => ipcRenderer.invoke('dashboard:settings', guildId) as Promise<AtlasServerSettings | null>,
   startDiscordLogin: () => ipcRenderer.invoke('discord:login') as Promise<void>,
   logoutDiscord: () => ipcRenderer.invoke('discord:logout') as Promise<void>,
   onDiscordAuthResult: (callback: (result: AuthResult) => void) => {

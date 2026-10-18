@@ -8,6 +8,7 @@ module.exports = (req, res) => {
   const origin = getOrigin(req);
   const state = String(req.query.state || "");
   const desktop = String(req.query.desktop || "") === "1";
+  const returnTo = !desktop && String(req.query.return_to || "") === "/dashboard" ? "/dashboard" : "/";
   const verifier = desktop ? crypto.randomBytes(32).toString("hex") : String(req.query.verifier || "");
   const challenge = desktop
     ? crypto.createHash("sha256").update(verifier).digest("base64url")
@@ -20,13 +21,14 @@ module.exports = (req, res) => {
   // Discord returns through /auth/callback, so the cookie must cover that route.
   const cookies = [`atlas_pkce=${verifier}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`];
   if (desktop) cookies.push(`atlas_desktop=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
+  else cookies.push(`atlas_return=${returnTo}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`);
   res.setHeader("Set-Cookie", cookies);
   const redirect = `${origin}/auth/callback`;
   const query = new URLSearchParams({
     client_id: clientId,
     response_type: "code",
     redirect_uri: redirect,
-    scope: "identify",
+    scope: "identify guilds",
     state,
     code_challenge: challenge,
     code_challenge_method: "S256"

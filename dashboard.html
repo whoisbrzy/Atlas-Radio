@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Dashboard — Atlas</title>
+  <link rel="icon" type="image/png" href="/atlas-logo.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/dashboard.css" />
+</head>
+<body class="dashboard-page">
+  <header class="topbar"><nav class="nav container" aria-label="Main">
+    <a class="nav__brand" href="/"><img class="logo-mark" src="/atlas-logo.png" alt="" /><span>Atlas</span></a>
+    <div class="nav__actions"><a class="btn btn--ghost btn--small" href="/">Back to Atlas</a><button class="dashboard-user" id="userButton" hidden></button>
+      <div class="profile-menu dashboard-profile-menu" id="userMenu" hidden><a class="profile-menu__item" href="#settings">User Settings</a><button class="profile-menu__item profile-menu__logout" id="logoutButton" type="button">Log out</button></div>
+    </div>
+  </nav></header>
+  <main class="dashboard-main container">
+    <section class="dashboard-welcome"><div><p class="dashboard-eyebrow">ATLAS · PERSONAL DASHBOARD</p><h1>Your servers</h1><p>Choose a Discord server you belong to and tailor your Atlas radio setup for it.</p></div><span class="dashboard-sync"><i></i> Syncs with Atlas Desktop</span></section>
+    <section class="dashboard-signin panel" id="signinPanel" hidden><div class="dashboard-signin-icon">A</div><div><h2>Sign in with Discord</h2><p>Your server list and saved radio settings are private to your Discord account.</p></div><button class="btn btn--primary" id="connectButton" type="button">Continue with Discord</button></section>
+    <div class="dashboard-layout" id="dashboardContent" hidden>
+      <section class="dashboard-server-panel panel"><div class="dashboard-section-heading"><div><p class="dashboard-eyebrow">DISCORD</p><h2>Servers you can access</h2></div><button class="dashboard-refresh" id="refreshButton" type="button" aria-label="Refresh servers" title="Refresh">↻</button></div><div class="dashboard-server-list" id="serverList" aria-live="polite"></div></section>
+      <section class="dashboard-editor panel" id="settings">
+        <div class="dashboard-empty" id="emptyState"><div class="dashboard-empty-mark">✳</div><h2>Choose a server</h2><p>Select a server to manage its personal Atlas presets and voice settings.</p></div>
+        <div id="editorContent" hidden>
+          <div class="dashboard-server-title"><img id="editorIcon" alt="" /><div><p class="dashboard-eyebrow">SERVER SETTINGS</p><h2 id="editorName"></h2><span>Only your account’s Atlas setup changes. Nothing is posted to Discord.</span></div></div>
+          <div class="dashboard-form-grid"><label>Unit / callsign<input id="callSign" maxlength="40" placeholder="e.g. Unit 421" /></label><label>Voice profile<select id="voiceStyle"><option>Natural</option><option>Dispatch</option><option>Calm</option><option>Urgent</option><option>Custom</option></select></label><label class="dashboard-check"><input id="includeCallSign" type="checkbox" /> Read callsign before phrases</label><label class="dashboard-check"><input id="sayOver" type="checkbox" /> End transmissions with “over”</label></div>
+          <div class="dashboard-presets-heading"><div><h3>Quick phrases</h3><p>These sync to Atlas Desktop for this server.</p></div><button class="dashboard-add" id="addPreset" type="button">Add phrase</button></div>
+          <div class="dashboard-presets" id="presetList"></div>
+          <div class="dashboard-editor-footer"><span id="saveStatus" role="status">Your changes save to your account.</span><button class="btn btn--primary" id="saveButton" type="button">Save settings</button></div>
+        </div>
+      </section>
+    </div>
+    <p class="dashboard-notice" id="dashboardNotice" role="status" hidden></p>
+    <section class="dashboard-user-settings panel" id="userSettings" hidden><div><p class="dashboard-eyebrow">ACCOUNT</p><h2>User Settings</h2><p>Your Discord profile is used to load servers you can access and sync your Atlas preferences.</p></div><div id="profileDetails"></div><button class="btn btn--ghost" id="settingsLogout" type="button">Log out of Discord</button></section>
+  </main>
+  <script src="/dashboard.js" defer></script>
+</body>
+</html>

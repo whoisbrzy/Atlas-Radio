@@ -132,6 +132,34 @@
     return CONFIG.developerIds.map(String).indexOf(String(user.id)) !== -1;
   }
 
+  function renderAccessibleServers(user) {
+    var track = document.querySelector(".marquee__track");
+    if (!track) return;
+    if (!user) {
+      track.innerHTML = '<span class="marquee__item">Sign in to load your servers</span><span class="marquee__item" aria-hidden="true">Sign in to load your servers</span>';
+      return;
+    }
+    fetch("/api/discord/servers", { credentials: "same-origin", cache: "no-store" }).then(function (response) {
+      return response.ok ? response.json() : null;
+    }).then(function (data) {
+      if (!data || !Array.isArray(data.servers) || !data.servers.length) return;
+      track.textContent = "";
+      data.servers.forEach(function (server) {
+        var item = document.createElement("span");
+        item.className = "marquee__item";
+        item.textContent = server.name;
+        track.appendChild(item);
+      });
+      data.servers.forEach(function (server) {
+        var item = document.createElement("span");
+        item.className = "marquee__item";
+        item.textContent = server.name;
+        item.setAttribute("aria-hidden", "true");
+        track.appendChild(item);
+      });
+    }).catch(function () { /* The dashboard reports server-access errors. */ });
+  }
+
   function renderLogin(user) {
     var btn = document.getElementById("discordLogin");
     if (!btn) return;
@@ -148,6 +176,7 @@
       btn.setAttribute("aria-expanded", "false");
       btn.title = user.global_name || user.username;
       if (developerItem) developerItem.hidden = !isDeveloper(user);
+      renderAccessibleServers(user);
     } else {
       btn.classList.remove("is-user");
       btn.innerHTML =
@@ -157,6 +186,7 @@
       btn.removeAttribute("title");
       if (menu) menu.hidden = true;
       if (developerItem) developerItem.hidden = true;
+      renderAccessibleServers(null);
     }
     if (devPanel && devPanel.classList.contains("is-open")) refreshDevLock();
   }

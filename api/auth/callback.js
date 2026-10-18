@@ -4,7 +4,8 @@ module.exports = async (req, res) => {
   const query = req.query || {};
   const origin = getOrigin(req);
   const redirectUri = `${origin}/auth/callback`;
-  const returnTo = origin;
+  const requestedReturn = req.cookies && req.cookies.atlas_return;
+  const returnTo = requestedReturn === "/dashboard" ? `${origin}/dashboard` : origin;
   const state = String(query.state || "");
   const desktop = Boolean(state && req.cookies && req.cookies.atlas_desktop === state);
 
@@ -49,6 +50,7 @@ module.exports = async (req, res) => {
     const session = `${payload}.${signature}`;
     const cookies = [
       `atlas_pkce=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+      `atlas_return=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
       `atlas_session=${session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(30, Number(tokens.expires_in) || 3600)}`
     ];
     if (desktop) cookies.push("atlas_desktop=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0");

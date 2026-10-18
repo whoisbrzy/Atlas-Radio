@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Build an unsigned Windows installer (`desktop-app/release/Atlas Desktop-Setup-0.2.0.exe`):
+Build an unsigned Windows installer (`desktop-app/release/Atlas Desktop-Setup-0.2.3.exe`):
 
 ```sh
 npm run package:windows
@@ -29,7 +29,7 @@ certificate is needed before distributing this as a broadly trusted release.
 - Desktop shell: Electron, React, TypeScript, and electron-vite.
 - Initial development target: Windows desktop; the shell itself remains portable.
 - Discord integration: optional Discord OAuth sign-in at `atlasvc.vercel.app` uses the Atlas Vercel
-  session to show your profile. It requests `identify` only. Atlas will not
+  session to show your profile and accessible servers. It requests `identify` and `guilds`. Atlas will not
   automate a user account, join channels as a bot, or use Discord voice APIs.
 - Audio routing: the user keeps using Discord normally and selects the VB-CABLE
   recording endpoint as their Discord input device.
@@ -82,4 +82,7 @@ Phase 4 adds quick phrases for Police, Sheriff, Fire / EMS, and DOT. Select a
 phrase to load it into the composer, optionally include a unit/callsign and an
 “over” sign-off, then use push-to-talk as usual. Custom phrases can be saved and
 removed; they stay in this Windows user profile and are not synced or sent
-anywhere except as audio through the output device while you hold to speak.
+anywhere except as audio through the output device while you hold to speak. Server
+preferences edited in the website dashboard are loaded on sign-in and when changing
+the selected server; configure the Vercel KV / Upstash REST environment values in the
+root README to enable this shared storage.
