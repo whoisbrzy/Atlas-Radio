@@ -1,7 +1,7 @@
 # Atlas Desktop — Phase 5 Release Candidate
 
-This is a separate Electron + React desktop client. It does not import the landing
-page, its styles, its images, or its logo. Atlas is a text-to-speech app for people
+This is a separate Electron + React desktop client. It uses the Atlas logo but
+does not embed the landing page or behave like a website. Atlas is a text-to-speech app for people
 using their normal Discord account and Discord client. It will output generated
 speech through an Atlas virtual microphone that the user selects in Discord.
 
@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Build an unsigned Windows installer (`desktop-app/release/Atlas Desktop-Setup-0.1.0.exe`):
+Build an unsigned Windows installer (`desktop-app/release/Atlas Desktop-Setup-0.2.0.exe`):
 
 ```sh
 npm run package:windows
@@ -28,14 +28,16 @@ certificate is needed before distributing this as a broadly trusted release.
 
 - Desktop shell: Electron, React, TypeScript, and electron-vite.
 - Initial development target: Windows desktop; the shell itself remains portable.
-- Discord integration: virtual audio input; Atlas will not log in to Discord,
+- Discord integration: optional Discord OAuth sign-in at `atlasvc.vercel.app` uses the Atlas Vercel
+  session to show your profile. It requests `identify` only. Atlas will not
   automate a user account, join channels as a bot, or use Discord voice APIs.
 - Audio routing: the user keeps using Discord normally and selects the VB-CABLE
   recording endpoint as their Discord input device.
 - Security: the renderer has no Node integration and runs in an isolated,
-  sandboxed Electron window. No Discord credentials are collected.
-- Speech is generated locally; Atlas does not sign in to Discord or automate a
-  Discord account. The optional VB-Audio driver is installed separately.
+  sandboxed Electron window. OAuth stays in a restricted sign-in window; Discord
+  tokens never enter the renderer.
+- Speech is generated locally; Atlas does not automate a Discord account. The
+  optional VB-Audio driver is installed separately.
 
 ## Phases
 
@@ -66,6 +68,14 @@ Phase 3 lists voices installed in Windows. Type a message and hold **Hold to
 speak** (or hold Space while that button is focused); releasing stops playback.
 If Windows reports that the selected output disappeared, Atlas stops speech and
 offers a reconnect action. Generated audio remains local to the computer.
+
+Atlas verifies an active connection to its sign-in service before opening the
+radio desk, and rechecks periodically while running. Speech remains local, but
+account verification and Discord sign-in require the internet. In **Audio Setup**,
+choose a Windows voice, select a Natural/Dispatch/Calm/Urgent profile, or tune
+pace and pitch. Use **Add Windows voices** to open Windows speech settings, then
+refresh the list after installing additional system voices. Voice tuning is saved
+on this device.
 
 Phase 4 adds quick phrases for Police, Sheriff, Fire / EMS, and DOT. Select a
 phrase to load it into the composer, optionally include a unit/callsign and an

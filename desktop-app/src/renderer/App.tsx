@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { AudioLines, Check, ExternalLink, LogOut, Maximize2, Minimize2, Minus, Radio, RefreshCcw, Settings2, Trash2, Waves, Wifi, WifiOff, X } from 'lucide-react'
+import atlasLogo from '../../../atlas-logo.png'
 
-type Section = 'Overview' | 'Text to speech' | 'Audio settings'
+type Section = 'Radio Desk' | 'Audio Setup'
 type Department = 'Police' | 'Sheriff' | 'Fire / EMS' | 'DOT'
 type PhrasePreset = { id: string; label: string; text: string }
 type AudioOutputChooser = MediaDevices & { selectAudioOutput?: () => Promise<MediaDeviceInfo> }
@@ -42,13 +44,17 @@ const DEFAULT_PRESETS: Record<Department, PhrasePreset[]> = {
 }
 
 const CUSTOM_PRESETS_KEY = 'atlas-desktop-custom-radio-presets-v1'
-
-function Mark() {
-  return <span className="brand-mark" aria-hidden="true"><span /></span>
-}
+const VOICE_STYLE_KEY = 'atlas-desktop-voice-style-v1'
+const VOICE_STYLES = {
+  Natural: { rate: 0, pitch: 0 },
+  Dispatch: { rate: -1, pitch: -2 },
+  Calm: { rate: -2, pitch: 1 },
+  Urgent: { rate: 2, pitch: 2 },
+  Custom: null,
+} as const
 
 function App() {
-  const [section, setSection] = useState<Section>('Overview')
+  const [section, setSection] = useState<Section>('Radio Desk')
   const [text, setText] = useState('')
   const [department, setDepartment] = useState<Department>('Police')
   const [customPresets, setCustomPresets] = useState<PhrasePreset[]>(() => {
@@ -67,8 +73,18 @@ function App() {
   const [outputConnected, setOutputConnected] = useState(false)
   const [voices, setVoices] = useState<string[]>([])
   const [voice, setVoice] = useState('')
+  const [voiceStyle, setVoiceStyle] = useState<keyof typeof VOICE_STYLES>('Natural')
+  const [voiceRate, setVoiceRate] = useState(0)
+  const [voicePitch, setVoicePitch] = useState(0)
+  const [internetStatus, setInternetStatus] = useState<'checking' | 'online' | 'offline'>('checking')
+  const [voiceRefreshBusy, setVoiceRefreshBusy] = useState(false)
+  const [windowMaximized, setWindowMaximized] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [speechStatus, setSpeechStatus] = useState('Choose the virtual cable as Atlas output and Discord input.')
+  const [discordProfile, setDiscordProfile] = useState<DiscordProfile | null>(null)
+  const [authReady, setAuthReady] = useState(false)
+  const [authBusy, setAuthBusy] = useState(false)
+  const [authMessage, setAuthMessage] = useState('')
   const holdActive = useRef(false)
   const pushSession = useRef(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -77,6 +93,86 @@ function App() {
   useEffect(() => {
     localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(customPresets))
   }, [customPresets])
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(VOICE_STYLE_KEY) || '{}') as { voiceStyle?: keyof typeof VOICE_STYLES; rate?: number; pitch?: number }
+      if (saved.voiceStyle && saved.voiceStyle in VOICE_STYLES) setVoiceStyle(saved.voiceStyle)
+      if (Number.isInteger(saved.rate) && saved.rate! >= -10 && saved.rate! <= 10) setVoiceRate(saved.rate!)
+      if (Number.isInteger(saved.pitch) && saved.pitch! >= -10 && saved.pitch! <= 10) setVoicePitch(saved.pitch!)
+    } catch { /* Use the natural voice defaults. */ }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem(VOICE_STYLE_KEY, JSON.stringify({ voiceStyle, rate: voiceRate, pitch: voicePitch }))
+  }, [voiceStyle, voiceRate, voicePitch])
+
+  useEffect(() => {
+    const unsubscribe = window.atlasDesktop.onWindowStateChanged(setWindowMaximized)
+    window.atlasDesktop.getWindowState().then(setWindowMaximized).catch(() => undefined)
+    return unsubscribe
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    let checking = false
+    const checkInternet = async () => {
+      if (checking) return
+      checking = true
+      try {
+        const connected = await window.atlasDesktop.checkInternet()
+        if (mounted) setInternetStatus(connected ? 'online' : 'offline')
+      } catch {
+        if (mounted) setInternetStatus('offline')
+      } finally { checking = false }
+    }
+    const onNetworkChange = () => { void checkInternet() }
+    void checkInternet()
+    const timer = window.setInterval(checkInternet, 15000)
+    window.addEventListener('online', onNetworkChange)
+    window.addEventListener('offline', onNetworkChange)
+    return () => {
+      mounted = false
+      window.clearInterval(timer)
+      window.removeEventListener('online', onNetworkChange)
+      window.removeEventListener('offline', onNetworkChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    const unsubscribe = window.atlasDesktop.onDiscordAuthResult(result => {
+      if (!mounted) return
+      setAuthBusy(false)
+      if ('profile' in result) {
+        setDiscordProfile(result.profile)
+        setAuthReady(true)
+        setAuthMessage('Discord account connected.')
+      } else {
+        setAuthMessage(result.error)
+      }
+    })
+    return () => { mounted = false; unsubscribe() }
+  }, [])
+
+  useEffect(() => {
+    if (internetStatus !== 'online') return
+    let mounted = true
+    setAuthReady(false)
+    window.atlasDesktop.getDiscordProfile().then(profile => {
+      if (mounted) {
+        setDiscordProfile(profile)
+        setAuthReady(true)
+        if (profile) setAuthMessage('')
+      }
+    }).catch(() => {
+      if (mounted) {
+        setAuthMessage('Could not verify your Discord session. Check your connection and try again.')
+        setAuthReady(true)
+      }
+    })
+    return () => { mounted = false }
+  }, [internetStatus])
 
   useEffect(() => {
     let mounted = true
@@ -155,7 +251,7 @@ function App() {
       const radioStart = includeCallsign && callsign.trim() ? `${callsign.trim()}, ` : ''
       const radioEnd = sayOver ? ' Over.' : ''
       const radioText = `${radioStart}${text.trim().slice(0, Math.max(0, 500 - radioStart.length - radioEnd.length))}${radioEnd}`
-      const base64 = await window.atlasDesktop.synthesizeSpeech(radioText, voice)
+      const base64 = await window.atlasDesktop.synthesizeSpeech(radioText, voice, voiceRate, voicePitch)
       if (!holdActive.current || session !== pushSession.current) {
         setSpeechStatus('Push-to-talk released. Ready when you are.')
         setSpeaking(false)
@@ -222,51 +318,183 @@ function App() {
     setSpeechStatus(`Saved “${label}” to your local radio presets.`)
   }
 
+  async function signInWithDiscord() {
+    if (internetStatus !== 'online') {
+      setAuthMessage('An active internet connection is required to sign in.')
+      return
+    }
+    setAuthBusy(true)
+    setAuthMessage('Opening secure Discord sign-in…')
+    try { await window.atlasDesktop.startDiscordLogin() }
+    catch (error) {
+      setAuthBusy(false)
+      setAuthMessage(error instanceof Error ? error.message : 'Could not open Discord sign-in.')
+    }
+  }
+
+  async function retryInternetCheck() {
+    setInternetStatus('checking')
+    try { setInternetStatus(await window.atlasDesktop.checkInternet() ? 'online' : 'offline') }
+    catch { setInternetStatus('offline') }
+  }
+
+  async function refreshVoices() {
+    setVoiceRefreshBusy(true)
+    try {
+      const installed = await window.atlasDesktop.listVoices()
+      setVoices(installed)
+      if (!installed.includes(voice)) setVoice(installed[0] || '')
+      setSpeechStatus(installed.length ? `${installed.length} Windows speech voice${installed.length === 1 ? '' : 's'} available.` : 'No Windows speech voices are installed yet.')
+    } catch (error) {
+      setSpeechStatus(error instanceof Error ? error.message : 'Could not refresh Windows voices.')
+    } finally { setVoiceRefreshBusy(false) }
+  }
+
+  async function openWindowsVoiceSettings() {
+    try { await window.atlasDesktop.openSpeechSettings() }
+    catch (error) { setSpeechStatus(error instanceof Error ? error.message : 'Could not open Windows speech settings.') }
+  }
+
+  function selectVoiceStyle(style: keyof typeof VOICE_STYLES) {
+    setVoiceStyle(style)
+    const preset = VOICE_STYLES[style]
+    if (preset) {
+      setVoiceRate(preset.rate)
+      setVoicePitch(preset.pitch)
+    }
+  }
+
+  async function signOutOfDiscord() {
+    try {
+      await window.atlasDesktop.logoutDiscord()
+      setDiscordProfile(null)
+      setAuthMessage('Signed out of Discord.')
+    } catch {
+      setAuthMessage('Could not sign out right now. Try again.')
+    }
+  }
+
+  if (internetStatus !== 'online' || !authReady || !discordProfile) {
+    return (
+      <div className="signin-screen">
+        <WindowTitleBar maximized={windowMaximized} onMaximizedChange={setWindowMaximized} />
+        <div className="signin-terminal" data-faulty-terminal data-tint="#ff4a1c" aria-hidden="true" />
+        <div className="signin-shade" aria-hidden="true" />
+        <header className="signin-brand"><img src={atlasLogo} alt="" /><span><strong>ATLAS</strong><small>RADIO DESK</small></span><span className="signin-brand-divider" /><span className="signin-app-label">DESKTOP CLIENT</span></header>
+        <main className="signin-card">
+          <div className="signin-icon"><Radio size={20} /></div>
+          <p className="eyebrow">YOUR RADIO STARTS HERE</p>
+          <h1>{internetStatus === 'offline' ? 'Internet required' : authReady ? 'Sign in to Atlas' : 'Checking your session'}</h1>
+          <p className="signin-copy">{internetStatus === 'offline' ? 'Atlas needs an active internet connection to verify your account and open the radio desk.' : internetStatus === 'checking' ? 'Checking your connection…' : !authReady ? 'Looking for your saved Discord account…' : 'Connect your Discord account to open your radio desk and manage your transmissions.'}</p>
+          {authMessage && <p className="signin-feedback" role="status">{authMessage}</p>}
+          {internetStatus === 'online' ? <button className="discord-login btn btn--primary" onClick={() => void signInWithDiscord()} disabled={!authReady || authBusy}><DiscordMark />{!authReady ? 'Checking Discord…' : authBusy ? 'Waiting for Discord…' : 'Continue with Discord'}</button> : <button className="discord-login btn btn--primary" onClick={() => void retryInternetCheck()} disabled={internetStatus === 'checking'}><RefreshCcw size={16} className={internetStatus === 'checking' ? 'spin' : ''} />{internetStatus === 'checking' ? 'Checking connection…' : 'Retry connection'}</button>}
+          <p className={`connection-message ${internetStatus === 'online' ? 'is-online' : ''}`}>{internetStatus === 'online' ? <Wifi size={13} /> : <WifiOff size={13} />}{internetStatus === 'online' ? 'Connected to Atlas services' : internetStatus === 'checking' ? 'Verifying internet access' : 'No internet connection detected'}</p>
+          <p className="signin-privacy">Your account is used for sign-in. Voice is still generated locally on this device.</p>
+        </main>
+        <div className="signin-footer"><span>ATLAS DESKTOP</span><span>SECURE DISCORD SIGN-IN</span></div>
+      </div>
+    )
+  }
+
   return (
     <div className="app-frame">
-      <aside className="rail">
-        <div className="brand"><Mark /><span>ATLAS</span></div>
-        <div className="rail-divider" />
-        <button className="server-orb selected" aria-label="Atlas home"><Mark /></button>
-        <button className="server-orb add-server" aria-label="Add a Discord server">+</button>
-        <div className="rail-bottom"><span className="connection-dot" /><span>LOCAL</span></div>
-      </aside>
+      <WindowTitleBar maximized={windowMaximized} onMaximizedChange={setWindowMaximized} />
+      <header className="appbar">
+        <div className="brand"><img src={atlasLogo} alt="" /><span><strong>ATLAS</strong><small>RADIO DESK</small></span></div>
+        <div className="appbar-divider" />
+        <div className="appbar-context"><span className="live-dot" /> Desktop audio</div>
+        <div className="appbar-spacer" />
+        <span className="app-version">DESKTOP · 0.2.1</span>
+      </header>
 
-      <aside className="sidebar">
-        <div className="workspace-title"><div><small>DESKTOP AUDIO</small><strong>Atlas Studio</strong></div><span className="tiny-caret">⌄</span></div>
-        <div className="sidebar-label">YOUR STUDIO</div>
-        {(['Overview', 'Text to speech', 'Audio settings'] as Section[]).map(item => (
-          <button key={item} className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>
-            <span className="nav-glyph">{item === 'Overview' ? '◈' : item === 'Text to speech' ? '◖' : '⚙'}</span>{item}
-          </button>
-        ))}
-        <div className="sidebar-spacer" />
-        <div className="account-card"><div className="account-avatar">A</div><div><strong>Local profile</strong><small>Desktop preview</small></div><span className="tiny-caret">···</span></div>
-      </aside>
+      <div className="workspace">
+        <aside className="sidebar">
+          <div className="sidebar-label">STUDIO</div>
+          {(['Radio Desk', 'Audio Setup'] as Section[]).map(item => (
+            <button key={item} className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>
+              <span className="nav-glyph">{item === 'Radio Desk' ? <Radio size={17} strokeWidth={1.8} /> : <Settings2 size={17} strokeWidth={1.8} />}</span>{item}
+            </button>
+          ))}
+          <div className="sidebar-spacer" />
+          <div className="account-area">
+            <div className="account-label">DISCORD ACCOUNT</div>
+            {discordProfile ? <div className="account-card">
+              {discordProfile.avatarUrl ? <img className="account-avatar" src={discordProfile.avatarUrl} alt="" /> : <div className="account-avatar fallback-avatar">{discordProfile.username[0]?.toUpperCase() || 'D'}</div>}
+              <div className="account-details"><strong>{discordProfile.globalName}</strong><small>@{discordProfile.username}</small></div>
+              <button className="account-action" onClick={() => void signOutOfDiscord()} title="Sign out of Discord" aria-label="Sign out of Discord"><LogOut size={15} /></button>
+            </div> : <div className="account-signin">
+              <p>{authMessage || 'Sign in to show your Discord profile in Atlas.'}</p>
+              <button className="discord-login btn btn--primary" onClick={() => void signInWithDiscord()} disabled={authBusy}><DiscordMark />{authBusy ? 'Waiting for Discord…' : 'Sign in with Discord'}</button>
+            </div>}
+            {discordProfile && authMessage && <p className="auth-message" role="status">{authMessage}</p>}
+            <p className="account-footnote">Login identifies your profile. Audio still routes through your selected mic.</p>
+          </div>
+        </aside>
 
-      <main className="content">
-        <header className="topline"><div className="breadcrumb"><span>Atlas Studio</span><b>/</b><strong>{section}</strong></div><div className="topline-right"><span className="preview-pill"><i /> PHASE 4 ER:LC CONTROLS</span><button className="help-button" title="Help">?</button></div></header>
-        <div className="page-scroll">
-          <section className="welcome"><div><p className="overline">VOICE, ON YOUR TERMS</p><h1>{section === 'Overview' ? <>Your words.<br /><em>On air.</em></> : section}</h1><p className="welcome-copy">Atlas turns your text into speech and routes it through your microphone in the Discord app you already use.</p></div><div className="sound-art" aria-hidden="true"><div className="sound-ring ring-one" /><div className="sound-ring ring-two" /><div className="sound-center"><Mark /></div><div className="sound-wave"><i /><i /><i /><i /><i /><i /><i /></div></div></section>
+        <main className="main-content">
+          <div className="page-heading">
+            <div><p className="eyebrow">ATLAS DESKTOP</p><h1>{section}</h1><p className="page-description">{section === 'Radio Desk' ? 'Choose a ready-made call or write your own.' : 'Set up the audio route Atlas uses for Discord.'}</p></div>
+            {section === 'Radio Desk' && <div className={`route-indicator ${outputConnected ? 'connected' : ''}`}><span />{outputConnected ? 'Audio route ready' : 'Audio route needs setup'}</div>}
+          </div>
 
-          <section className="connection-card"><div className="card-heading"><div><p className="overline">AUDIO ROUTE</p><h2>Use Atlas with your Discord account</h2></div><span className={`status-chip ${outputConnected ? 'is-ready' : ''}`}><i /> {outputConnected ? 'OUTPUT CONNECTED' : outputDevice ? 'OUTPUT DISCONNECTED' : 'OUTPUT NOT SET'}</span></div><div className="connection-row"><div className="discord-mark">♫</div><div className="server-copy"><strong>{outputDevice?.label || 'Choose an audio output'}</strong><small>Atlas output: VB-CABLE “CABLE Input” · Discord microphone: “CABLE Output”</small></div><button className="outline-button" onClick={chooseOutput}>Choose / reconnect <span>⌄</span></button></div><p className="hint"><span>i</span> Install VB-Audio Virtual Cable separately. Atlas does not include or install third-party audio drivers.</p><p className="route-status" role="status">{speechStatus}</p></section>
+          {section === 'Radio Desk' ? <div className="desk-layout">
+            <section className="panel presets-panel">
+              <div className="panel-heading"><div><h2>Quick phrases</h2><p>Choose your department, then load a phrase.</p></div></div>
+              <div className="department-tabs" role="tablist" aria-label="Department presets">{(Object.keys(DEFAULT_PRESETS) as Department[]).map(item => <button key={item} role="tab" aria-selected={department === item} className={department === item ? 'selected' : ''} onClick={() => setDepartment(item)}>{item}</button>)}</div>
+              <div className="preset-grid">{[...DEFAULT_PRESETS[department], ...customPresets].map(preset => <div className="preset-item" key={preset.id}><button className="preset-button" title={preset.text} onClick={() => { setText(preset.text.slice(0, 500)); setSpeechStatus(`Loaded “${preset.label}”. Hold to speak when ready.`) }}><strong>{preset.label}</strong><span>{preset.text}</span></button>{customPresets.some(item => item.id === preset.id) && <button className="preset-remove" aria-label={`Delete ${preset.label}`} title="Delete custom preset" onClick={() => setCustomPresets(current => current.filter(item => item.id !== preset.id))}><Trash2 size={14} /></button>}</div>)}</div>
+              <div className="radio-tools"><label className="call-sign-field"><span>UNIT / CALLSIGN</span><input value={callsign} onChange={event => setCallsign(event.target.value.slice(0, 40))} placeholder="e.g. Unit 421" maxLength={40} /></label><label className="radio-check"><input type="checkbox" checked={includeCallsign} onChange={event => setIncludeCallsign(event.target.checked)} /> Read callsign</label><label className="radio-check"><input type="checkbox" checked={sayOver} onChange={event => setSayOver(event.target.checked)} /> End with “over”</label></div>
+            </section>
 
-          <section className="radio-card">
-            <div className="card-heading"><div><p className="overline">ER:LC RADIO DESK</p><h2>Department quick phrases</h2></div><span className="character-count">Tap a phrase to load it</span></div>
-            <div className="department-tabs" role="tablist" aria-label="Department presets">{(Object.keys(DEFAULT_PRESETS) as Department[]).map(item => <button key={item} role="tab" aria-selected={department === item} className={department === item ? 'selected' : ''} onClick={() => setDepartment(item)}>{item}</button>)}</div>
-            <div className="preset-grid">{[...DEFAULT_PRESETS[department], ...customPresets].map(preset => <div className="preset-item" key={preset.id}><button className="preset-button" title={preset.text} onClick={() => { setText(preset.text.slice(0, 500)); setSpeechStatus(`Loaded “${preset.label}”. Hold to speak when ready.`) }}><strong>{preset.label}</strong><span>{preset.text}</span></button>{customPresets.some(item => item.id === preset.id) && <button className="preset-remove" aria-label={`Delete ${preset.label}`} title="Delete custom preset" onClick={() => setCustomPresets(current => current.filter(item => item.id !== preset.id))}>×</button>}</div>)}</div>
-            <div className="radio-tools"><label className="call-sign-field"><span>UNIT / CALLSIGN</span><input value={callsign} onChange={event => setCallsign(event.target.value.slice(0, 40))} placeholder="e.g. Unit 421" maxLength={40} /></label><label className="radio-check"><input type="checkbox" checked={includeCallsign} onChange={event => setIncludeCallsign(event.target.checked)} /> Read callsign</label><label className="radio-check"><input type="checkbox" checked={sayOver} onChange={event => setSayOver(event.target.checked)} /> End with “over”</label></div>
-          </section>
+            <section className="panel composer-card"><div className="panel-heading"><div><h2>Compose transmission</h2><p>Speech is generated on this computer.</p></div><span className="character-count">{text.length}/500</span></div>
+              <textarea value={text} onChange={event => setText(event.target.value.slice(0, 500))} placeholder="Type a message or choose a quick phrase…" maxLength={500} />
+              <div className="composer-controls"><label className="voice-select"><AudioLines className="voice-icon" size={17} /><span><small>VOICE</small><select aria-label="Speech voice" value={voice} onChange={event => setVoice(event.target.value)} disabled={!voices.length}>{voices.length ? voices.map(item => <option key={item} value={item}>{item}</option>) : <option>Loading voices…</option>}</select></span></label><button className="clear-button" onClick={() => setText('')} disabled={!text}>Clear</button></div>
+              <button className={`speak-button push-button ${speaking ? 'is-speaking' : ''}`} onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); void beginPushToTalk() }} onPointerUp={endPushToTalk} onPointerCancel={endPushToTalk} onLostPointerCapture={endPushToTalk} onKeyDown={event => { if (event.code === 'Space' && !event.repeat) { event.preventDefault(); void beginPushToTalk() } }} onKeyUp={event => { if (event.code === 'Space') { event.preventDefault(); endPushToTalk() } }} disabled={!text.trim() || !outputConnected || !voice}><span className="ptt-icon">{speaking ? <Waves size={16} /> : <Radio size={16} />}</span><span>{speaking ? 'TRANSMITTING · RELEASE TO STOP' : 'HOLD TO TRANSMIT'}</span><kbd>SPACE</kbd></button>
+              <p className="route-status" role="status">{speechStatus}</p>
+              <div className="save-preset"><input value={presetLabel} onChange={event => setPresetLabel(event.target.value.slice(0, 32))} maxLength={32} placeholder="Name this phrase" aria-label="Preset name" /><button className="outline-button btn btn--ghost btn--small" onClick={addCustomPreset} disabled={!presetLabel.trim() || !text.trim() || customPresets.length >= 24}>Save phrase</button></div>
+              <p className="preset-count">{customPresets.length} of 24 personal phrases saved on this device</p>
+            </section>
+          </div> : <div className="settings-layout">
+            <section className="panel audio-panel"><div className="panel-heading"><div><h2>Audio output</h2><p>Send Atlas speech to this playback device.</p></div><span className={`status-chip ${outputConnected ? 'is-ready' : ''}`}><i />{outputConnected ? 'READY' : outputDevice ? 'DISCONNECTED' : 'NOT SET'}</span></div>
+              <div className="connection-row"><div className="audio-icon"><AudioLines size={19} /></div><div className="server-copy"><strong>{outputDevice?.label || 'No output selected'}</strong><small>For Discord, choose CABLE Input here and CABLE Output as Discord’s mic.</small></div><button className="outline-button btn btn--ghost btn--small" onClick={chooseOutput}>{outputConnected ? <><Check size={14} /> Change output</> : 'Choose output'}</button></div>
+              <p className="route-status" role="status">{speechStatus}</p>
+              <div className="setup-note"><strong>Virtual cable setup</strong><p>Install VB-Audio Virtual Cable separately, then restart Atlas. It is not bundled with this app.</p></div>
+            </section>
+            <section className="panel audio-panel"><div className="panel-heading"><div><h2>Speech voice</h2><p>Choose an installed Windows voice and shape its delivery.</p></div><button className="outline-button btn btn--ghost btn--small" onClick={() => void refreshVoices()} disabled={voiceRefreshBusy}><RefreshCcw size={14} className={voiceRefreshBusy ? 'spin' : ''} /> Refresh</button></div>
+              <label className="settings-voice"><span>ACTIVE VOICE</span><select aria-label="Speech voice" value={voice} onChange={event => setVoice(event.target.value)} disabled={!voices.length}>{voices.length ? voices.map(item => <option key={item} value={item}>{item}</option>) : <option>No Windows voices found</option>}</select></label>
+              <label className="settings-voice"><span>VOICE PROFILE</span><select aria-label="Voice profile" value={voiceStyle} onChange={event => selectVoiceStyle(event.target.value as keyof typeof VOICE_STYLES)}>{Object.keys(VOICE_STYLES).map(style => <option key={style}>{style}</option>)}</select></label>
+              <div className="voice-tuning"><label><span>PACE <output>{voiceRate > 0 ? '+' : ''}{voiceRate}</output></span><input type="range" min="-10" max="10" step="1" value={voiceRate} onChange={event => { setVoiceRate(Number(event.target.value)); setVoiceStyle('Custom') }} /></label><label><span>PITCH <output>{voicePitch > 0 ? '+' : ''}{voicePitch}</output></span><input type="range" min="-10" max="10" step="1" value={voicePitch} onChange={event => { setVoicePitch(Number(event.target.value)); setVoiceStyle('Custom') }} /></label></div>
+              <div className="voice-actions"><p>Settings are saved on this device. Install more voices in Windows, then refresh.</p><button className="outline-button btn btn--ghost btn--small" onClick={() => void openWindowsVoiceSettings()}><ExternalLink size={13} /> Add Windows voices</button></div>
+            </section>
+          </div>}
 
-          <section className="composer-card"><div className="card-heading"><div><p className="overline">QUICK SPEECH</p><h2>Push to talk</h2></div><span className="character-count">{text.length} / 500</span></div><textarea value={text} onChange={event => setText(event.target.value.slice(0, 500))} placeholder="Type a message or choose a department phrase…" maxLength={500} /><div className="composer-footer"><label className="voice-select"><span className="voice-icon">♫</span><span><small>INSTALLED VOICE</small><select aria-label="Speech voice" value={voice} onChange={event => setVoice(event.target.value)} disabled={!voices.length}>{voices.length ? voices.map(item => <option key={item} value={item}>{item}</option>) : <option>Loading voices…</option>}</select></span></label><button className={`speak-button push-button ${speaking ? 'is-speaking' : ''}`} onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); void beginPushToTalk() }} onPointerUp={endPushToTalk} onPointerCancel={endPushToTalk} onLostPointerCapture={endPushToTalk} onKeyDown={event => { if (event.code === 'Space' && !event.repeat) { event.preventDefault(); void beginPushToTalk() } }} onKeyUp={event => { if (event.code === 'Space') { event.preventDefault(); endPushToTalk() } }} disabled={!text.trim() || !outputConnected || !voice}><span>{speaking ? '●' : '◉'}</span> {speaking ? 'Speaking · release to stop' : 'Hold to speak'}</button><button className="clear-button" onClick={() => setText('')} disabled={!text}>Clear</button></div><p className="phase-note">Choose a Windows voice, then hold the button (or Space while focused). Releasing stops playback.</p>
-            <div className="save-preset"><input value={presetLabel} onChange={event => setPresetLabel(event.target.value.slice(0, 32))} maxLength={32} placeholder="Name this phrase" aria-label="Preset name" /><button className="outline-button" onClick={addCustomPreset} disabled={!presetLabel.trim() || !text.trim() || customPresets.length >= 24}>Save as preset</button><span>{customPresets.length}/24 custom phrases saved on this device</span></div>
-          </section>
-
-          <footer className="status-footer"><span><i className="connection-dot" /> All systems local</span><span>Atlas Desktop <b>·</b> 0.1.0</span></footer>
-        </div>
-      </main>
+          <footer className="main-footer"><span>Atlas keeps your voice and phrases on this device.</span><span>Discord account required</span></footer>
+        </main>
+      </div>
     </div>
   )
+}
+
+function WindowTitleBar({ maximized, onMaximizedChange }: { maximized: boolean; onMaximizedChange: (maximized: boolean) => void }) {
+  async function toggleMaximize() {
+    try { onMaximizedChange(await window.atlasDesktop.toggleMaximizeWindow()) }
+    catch { /* The window may be closing. */ }
+  }
+
+  return (
+    <div className="window-titlebar" role="toolbar" aria-label="Window controls">
+      <div className="window-traffic-lights">
+        <button className="traffic-light close" aria-label="Close Atlas" title="Close" onClick={() => void window.atlasDesktop.closeWindow()}><X size={9} /></button>
+        <button className="traffic-light minimize" aria-label="Minimize Atlas" title="Minimize" onClick={() => void window.atlasDesktop.minimizeWindow()}><Minus size={9} /></button>
+        <button className="traffic-light maximize" aria-label={maximized ? 'Restore Atlas' : 'Maximize Atlas'} title={maximized ? 'Restore' : 'Maximize'} onClick={() => void toggleMaximize()}>{maximized ? <Minimize2 size={8} /> : <Maximize2 size={8} />}</button>
+      </div>
+      <div className="window-title"><img src={atlasLogo} alt="" /><span>Atlas</span></div>
+      <div className="window-titlebar-spacer" />
+    </div>
+  )
+}
+
+function DiscordMark() {
+  return <svg className="discord-mark" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.32 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.445.865-.61 1.25a18.27 18.27 0 0 0-5.49 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.675 4.37a.07.07 0 0 0-.032.027C.533 9.08-.32 13.65.106 18.164a.083.083 0 0 0 .031.056 19.9 19.9 0 0 0 6.004 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.077.077 0 0 0-.042-.107 13.13 13.13 0 0 1-1.875-.894.078.078 0 0 1-.008-.13c.126-.094.251-.192.37-.29a.074.074 0 0 1 .077-.01c3.93 1.794 8.19 1.794 12.074 0a.074.074 0 0 1 .078.01c.12.099.245.197.372.291a.078.078 0 0 1-.007.13c-.599.35-1.228.65-1.877.893a.078.078 0 0 0-.041.108c.36.698.772 1.36 1.225 1.993a.077.077 0 0 0 .084.029 19.84 19.84 0 0 0 6.012-3.03.078.078 0 0 0 .03-.055c.51-5.216-.85-9.75-3.54-13.768a.062.062 0 0 0-.03-.027ZM8.02 14.9c-1.18 0-2.153-1.084-2.153-2.416 0-1.332.954-2.416 2.153-2.416 1.208 0 2.18 1.093 2.162 2.416 0 1.332-.954 2.416-2.162 2.416Zm7.96 0c-1.18 0-2.153-1.084-2.153-2.416 0-1.332.936-2.416 2.153-2.416 1.208 0 2.18 1.093 2.162 2.416 0 1.332-.954 2.416-2.162 2.416Z" /></svg>
 }
 
 export default App

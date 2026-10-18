@@ -821,4 +821,15 @@ void main() {
   }
 
   document.querySelectorAll("[data-faulty-terminal]").forEach(mount);
+  // The website mounts this background statically; the desktop client mounts
+  // it from React after startup, so observe newly-created terminal surfaces.
+  new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      record.addedNodes.forEach(function (node) {
+        if (node.nodeType !== 1) return;
+        if (node.matches && node.matches("[data-faulty-terminal]")) mount(node);
+        if (node.querySelectorAll) node.querySelectorAll("[data-faulty-terminal]").forEach(mount);
+      });
+    });
+  }).observe(document.documentElement, { childList: true, subtree: true });
 })();
